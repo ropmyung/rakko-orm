@@ -12,6 +12,7 @@ from typing import Any, cast
 
 from rakko.fields.base import Field
 from rakko.fields.relational import BackwardFKRelation, ManyToManyFieldInstance, RelationalField
+from rakko.indexes import Index
 from rakko.migrations.schema_generator.state_apps import StateApps
 from rakko.models import Model
 
@@ -49,13 +50,12 @@ class ModelState(BaseEntityState):
         )
 
     def render(self, apps: StateApps, *, deepcopy_fields: bool = True) -> type[Model]:
-        meta_class = type("Meta", (), self.options)
 
         if deepcopy_fields:
             attrs: dict[str, Any] = {name: copy(field) for name, field in self.fields.items()}
         else:
             attrs = dict(self.fields)
-        attrs["Meta"] = meta_class
+        attrs["Meta"] = dict(self.options)
         attrs["_no_comments"] = True
 
         model = type(self.name, self.bases, attrs)
@@ -88,9 +88,15 @@ class ModelState(BaseEntityState):
         if model._meta.unique_together:
             options["unique_together"] = model._meta.unique_together
         if model._meta.constraints:
-            options["constraints"] = model._meta.constraints
+            options["constraints"] = tuple(constraint.resolve(model) for constraint in model._meta.constraints)
         if model._meta.indexes:
-            options["indexes"] = model._meta.indexes
+            indexes = []
+            for index in model._meta.indexes:
+                if isinstance(index, Index):
+                    index = copy(index)
+                    index.resolve_expressions(model)
+                indexes.append(index)
+            options["indexes"] = tuple(indexes)
         if model._meta.pk_attr:
             options["pk_attr"] = model._meta.pk_attr
         if model._meta.table_description:

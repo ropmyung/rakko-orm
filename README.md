@@ -113,8 +113,8 @@ uv run --group docs sphinx-build -W --keep-going -b html docs docs/_build/html
 ```
 
 The test suite exercises SQLite execution, generated MySQL/PostgreSQL SQL and
-Pyright typing contracts. The migration framework and additional integrations
-are retained from the original codebase and are still being adapted to Rakko's API.
+Pyright typing contracts. Migration CLI tests also cover live MySQL and PostgreSQL application/reversal.
+Additional framework integrations remain under adaptation.
 
 ## Origins and license
 

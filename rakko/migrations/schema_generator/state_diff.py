@@ -20,13 +20,13 @@ from rakko.migrations.operations import (
     AddIndex,
     AlterField,
     AlterModelOptions,
+    RakkoOperation,
     RemoveConstraint,
     RemoveField,
     RemoveIndex,
     RenameConstraint,
     RenameField,
     RenameIndex,
-    TortoiseOperation,
 )
 
 if TYPE_CHECKING:
@@ -114,11 +114,11 @@ class StateModelDiff:
         self.old_state = old_state
         self.new_state = new_state
 
-    def generate_operations(self) -> list[TortoiseOperation]:
+    def generate_operations(self) -> list[RakkoOperation]:
         if self.old_state is self.new_state:
             return []
 
-        operations: list[TortoiseOperation] = []
+        operations: list[RakkoOperation] = []
         operations.extend(self._generate_index_operations())
         operations.extend(self._generate_constraint_operations())
         old_options = _model_options_for_compare(self.old_state.options)
@@ -148,8 +148,8 @@ class StateModelDiff:
             for item in value
         ]
 
-    def _generate_index_operations(self) -> list[TortoiseOperation]:
-        operations: list[TortoiseOperation] = []
+    def _generate_index_operations(self) -> list[RakkoOperation]:
+        operations: list[RakkoOperation] = []
         old_indexes = self._normalize_indexes_with_explicit(
             self.old_state.options.get("indexes", ())
         )
@@ -207,8 +207,8 @@ class StateModelDiff:
 
         return operations
 
-    def _generate_constraint_operations(self) -> list[TortoiseOperation]:
-        operations: list[TortoiseOperation] = []
+    def _generate_constraint_operations(self) -> list[RakkoOperation]:
+        operations: list[RakkoOperation] = []
         old_unique = _normalize_unique_together(self.old_state.options.get("unique_together", ()))
         new_unique = _normalize_unique_together(self.new_state.options.get("unique_together", ()))
 
@@ -263,12 +263,12 @@ class StateModelDiff:
 
         # Rename detection for CheckConstraint (by matching check expression)
         old_by_check: dict[str, CheckConstraint] = {
-            constraint.check: constraint
+            constraint._signature()[1]: constraint
             for constraint in old_constraints
             if isinstance(constraint, CheckConstraint)
         }
         new_by_check: dict[str, CheckConstraint] = {
-            constraint.check: constraint
+            constraint._signature()[1]: constraint
             for constraint in new_constraints
             if isinstance(constraint, CheckConstraint)
         }
@@ -324,8 +324,8 @@ class StateFieldDiff:
 
     def _generated_field_recreate_ops(
         self, field_name: str, field: Field
-    ) -> list[TortoiseOperation]:
-        operations: list[TortoiseOperation] = []
+    ) -> list[RakkoOperation]:
+        operations: list[RakkoOperation] = []
         if getattr(field, "index", False):
             operations.append(
                 AddIndex(model_name=self.new_state.name, index=Index(fields=(field_name,)))
@@ -369,8 +369,8 @@ class StateFieldDiff:
 
         return operations
 
-    def generate_operations(self) -> list[TortoiseOperation]:
-        operations: list[TortoiseOperation] = []
+    def generate_operations(self) -> list[RakkoOperation]:
+        operations: list[RakkoOperation] = []
         old_fields = self.old_state.fields
         new_fields = self.new_state.fields
         added_fields = set(new_fields) - set(old_fields)

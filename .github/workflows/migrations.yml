@@ -1,0 +1,42 @@
+# Copyright (c) 2026 ropmyung (Rakko ORM additions).
+# SPDX-License-Identifier: Apache-2.0
+
+name: Database migration tests
+on:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: rakko_check
+          MYSQL_DATABASE: rakko_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -prakko_check"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: rakko_check
+          POSTGRES_DB: rakko_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d rakko_test"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      RAKKO_MIGRATION_MYSQL_URL: mysql://root:rakko_check@127.0.0.1:3306/rakko_test
+      RAKKO_MIGRATION_POSTGRES_URL: asyncpg://postgres:rakko_check@127.0.0.1:5432/rakko_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: "3.12"
+      - run: uv sync --frozen --no-default-groups --group test --extra asyncpg --extra psycopg --extra asyncmy
+      - run: uv run --no-sync pytest -q tests/migrations/test_databases.py

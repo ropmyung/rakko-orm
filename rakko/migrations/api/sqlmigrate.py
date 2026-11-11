@@ -6,8 +6,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from rakko import Tortoise
-from rakko.config import TortoiseConfig
+from rakko import Rakko
+from rakko.config import RakkoConfig
 from rakko.connection import get_connection
 from rakko.migrations.executor import MigrationExecutor
 from rakko.migrations.graph import MigrationKey
@@ -29,7 +29,7 @@ class _NoopRecorder(MigrationRecorder):
 
 async def sqlmigrate(
     *,
-    config: dict[str, Any] | TortoiseConfig | None = None,
+    config: dict[str, Any] | RakkoConfig | None = None,
     config_file: str | None = None,
     app_label: str,
     migration_name: str,
@@ -38,8 +38,8 @@ async def sqlmigrate(
     """Collect the SQL statements for a single migration without executing them.
 
     Args:
-        config: Tortoise ORM config dict or TortoiseConfig object.
-        config_file: Path to a JSON/YAML config file for Tortoise ORM.
+        config: Rakko ORM config dict or RakkoConfig object.
+        config_file: Path to a JSON/YAML config file for Rakko ORM.
         app_label: The application label.
         migration_name: The migration name (exact or prefix match).
         backward: If True, collect SQL for unapplying the migration.
@@ -47,11 +47,11 @@ async def sqlmigrate(
     Returns:
         A list of SQL strings (including descriptive comment annotations).
     """
-    config = TortoiseConfig.resolve_args(config, config_file).to_dict()
+    config = RakkoConfig.resolve_args(config, config_file).to_dict()
     if not config:
         raise ValueError("sqlmigrate requires a config or config_file")
 
-    await Tortoise.init(config=config, init_connections=False)
+    await Rakko.init(config=config, init_connections=False)
 
     configured_apps = config.get("apps", {})
     if app_label not in configured_apps:

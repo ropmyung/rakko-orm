@@ -99,7 +99,7 @@ class SQLOperation(Operation):
                 await state_editor._run_sql(self.query)
 
 
-class TortoiseOperation(Operation):
+class RakkoOperation(Operation):
     def state_forward(self, app_label: str, state: State) -> None:
         return None
 
@@ -143,7 +143,7 @@ class TortoiseOperation(Operation):
         await self.database_forward(app_label, old_state, state, state_editor)  # type: ignore[arg-type]
 
 
-class CreateModel(TortoiseOperation):
+class CreateModel(RakkoOperation):
     def __init__(
         self,
         name: str,
@@ -163,10 +163,9 @@ class CreateModel(TortoiseOperation):
     @property
     def model(self) -> type[Model]:
         if not self._model:
-            meta_class = type("Meta", (), self.options or {})
 
             attributes: dict[str, Any] = dict(self.fields)
-            attributes["Meta"] = meta_class
+            attributes["Meta"] = dict(self.options or {})
             attributes["_no_comments"] = True
             self._model = cast(type[Model], type(self.name, (Model,), attributes))
 
@@ -228,7 +227,7 @@ class CreateModel(TortoiseOperation):
         return None
 
 
-class RenameModel(TortoiseOperation):
+class RenameModel(RakkoOperation):
     def __init__(self, old_name: str, new_name: str) -> None:
         self.old_name = old_name
         self.new_name = new_name
@@ -307,7 +306,7 @@ class RenameModel(TortoiseOperation):
         await state_editor.rename_table(new_model, old_table, new_table)
 
 
-class DeleteModel(TortoiseOperation):
+class DeleteModel(RakkoOperation):
     def __init__(self, name: str) -> None:
         self.name = name
 
@@ -367,7 +366,7 @@ class DeleteModel(TortoiseOperation):
         await state_editor.create_model(model)
 
 
-class AlterModelOptions(TortoiseOperation):
+class AlterModelOptions(RakkoOperation):
     # Options carried by other operations; the rest belong to this one.
     UNMANAGED_OPTION_KEYS = frozenset({"table", "app", "indexes", "unique_together", "constraints"})
 
@@ -407,7 +406,7 @@ class AlterModelOptions(TortoiseOperation):
         return None
 
 
-class AddField(TortoiseOperation):
+class AddField(RakkoOperation):
     def __init__(self, model_name: str, name: str, field: FieldLike) -> None:
         self.model_name = model_name
         self.name = name
@@ -458,7 +457,7 @@ class AddField(TortoiseOperation):
         await state_editor.remove_field(model, field)
 
 
-class RemoveField(TortoiseOperation):
+class RemoveField(RakkoOperation):
     def __init__(self, model_name: str, name: str) -> None:
         self.model_name = model_name
         self.name = name
@@ -507,7 +506,7 @@ class RemoveField(TortoiseOperation):
         await state_editor.add_field(model, self.name)
 
 
-class AlterField(TortoiseOperation):
+class AlterField(RakkoOperation):
     def __init__(self, model_name: str, name: str, field: FieldLike) -> None:
         self.model_name = model_name
         self.name = name
@@ -558,7 +557,7 @@ class AlterField(TortoiseOperation):
         await state_editor.alter_field(old_model, new_model, self.name)
 
 
-class RenameField(TortoiseOperation):
+class RenameField(RakkoOperation):
     def __init__(self, model_name: str, old_name: str, new_name: str) -> None:
         self.model_name = model_name
         self.old_name = old_name
@@ -659,7 +658,7 @@ def _set_option_list(model_state: ModelState, key: str, values: list) -> None:
         model_state.options.pop(key, None)
 
 
-class AddIndex(TortoiseOperation):
+class AddIndex(RakkoOperation):
     def __init__(self, model_name: str, index: Index) -> None:
         self.model_name = model_name
         self.index = index
@@ -699,7 +698,7 @@ class AddIndex(TortoiseOperation):
         await state_editor.remove_index(model, self.index)
 
 
-class RemoveIndex(TortoiseOperation):
+class RemoveIndex(RakkoOperation):
     def __init__(
         self, model_name: str, name: str | None = None, fields: list[str] | None = None
     ) -> None:
@@ -765,7 +764,7 @@ class RemoveIndex(TortoiseOperation):
         await state_editor.add_index(model, index)
 
 
-class RenameIndex(TortoiseOperation):
+class RenameIndex(RakkoOperation):
     def __init__(
         self,
         model_name: str,
@@ -855,7 +854,7 @@ class RenameIndex(TortoiseOperation):
         await state_editor.rename_index(model, old_index, new_index)
 
 
-class AddConstraint(TortoiseOperation):
+class AddConstraint(RakkoOperation):
     def __init__(self, model_name: str, constraint: UniqueConstraint | CheckConstraint) -> None:
         self.model_name = model_name
         self.constraint = constraint
@@ -900,11 +899,11 @@ class AddConstraint(TortoiseOperation):
     ) -> None:
         if not state_editor:
             return
-        model = old_state.apps.get_model(f"{app_label}.{self.model_name}")
+        model = new_state.apps.get_model(f"{app_label}.{self.model_name}")
         await state_editor.remove_constraint(model, self.constraint)
 
 
-class RemoveConstraint(TortoiseOperation):
+class RemoveConstraint(RakkoOperation):
     def __init__(self, model_name: str, name: str | None = None, fields: list[str] | None = None):
         if not name and not fields:
             raise ValueError("RemoveConstraint requires name or fields.")
@@ -960,7 +959,7 @@ class RemoveConstraint(TortoiseOperation):
     ) -> None:
         if not state_editor:
             return
-        model = old_state.apps.get_model(f"{app_label}.{self.model_name}")
+        model = new_state.apps.get_model(f"{app_label}.{self.model_name}")
         model_state = old_state.models[(app_label, self.model_name)]
         constraint = self._resolve_constraint(model_state)
         await state_editor.remove_constraint(model, constraint)
@@ -980,7 +979,7 @@ class RemoveConstraint(TortoiseOperation):
         await state_editor.add_constraint(model, constraint)
 
 
-class RenameConstraint(TortoiseOperation):
+class RenameConstraint(RakkoOperation):
     def __init__(self, model_name: str, old_name: str, new_name: str) -> None:
         self.model_name = model_name
         self.old_name = old_name
@@ -1071,7 +1070,7 @@ class RenameConstraint(TortoiseOperation):
             return
         model = new_state.apps.get_model(f"{app_label}.{self.model_name}")
         # Look up actual constraint from new state (which has the new_name)
-        new_model_state = new_state.models.get((app_label, self.model_name))
+        new_model_state = old_state.models.get((app_label, self.model_name))
         if new_model_state:
             new_constraint = self._find_constraint_by_name(new_model_state, self.new_name)
         else:
@@ -1088,7 +1087,7 @@ class RenameConstraint(TortoiseOperation):
         await state_editor.rename_constraint(model, new_constraint, old_constraint)
 
 
-class RunPython(TortoiseOperation):
+class RunPython(RakkoOperation):
     reduces_to_sql = False
 
     def __init__(
@@ -1146,7 +1145,7 @@ class RunPython(TortoiseOperation):
         return None
 
 
-class CreateSchema(TortoiseOperation):
+class CreateSchema(RakkoOperation):
     """Create a database schema before tables that use it."""
 
     def __init__(self, schema_name: str) -> None:
@@ -1178,7 +1177,7 @@ class CreateSchema(TortoiseOperation):
         await state_editor.drop_schema(self.schema_name)
 
 
-class DropSchema(TortoiseOperation):
+class DropSchema(RakkoOperation):
     """Drop a database schema."""
 
     def __init__(self, schema_name: str) -> None:
@@ -1210,7 +1209,7 @@ class DropSchema(TortoiseOperation):
         await state_editor.create_schema(self.schema_name)
 
 
-class RunSQL(TortoiseOperation):
+class RunSQL(RakkoOperation):
     """
     Run raw SQL statements. Optionally provide reverse SQL for rollback.
 

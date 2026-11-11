@@ -5,7 +5,7 @@
 """Migration API (experimental).
 
 Integration note: the migration API initializes apps without eagerly creating
-database clients by calling ``Tortoise.init(..., init_connections=False)``.
+database clients by calling ``Rakko.init(..., init_connections=False)``.
 Connections are created lazily when the executor requests them.
 """
 

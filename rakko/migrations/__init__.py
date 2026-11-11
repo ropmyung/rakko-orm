@@ -2,7 +2,7 @@
 # Derived from Tortoise ORM; maintained and modified for Rakko ORM.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Vendored migrations package (experimental)."""
+"""Rakko migrations and historical schema operations."""
 
 from rakko.migrations.migration import Migration
 from rakko.migrations.operations import (
@@ -14,12 +14,12 @@ from rakko.migrations.operations import (
     DeleteModel,
     DropSchema,
     Operation,
+    RakkoOperation,
     RemoveField,
     RenameField,
     RenameModel,
     RunPython,
     SQLOperation,
-    TortoiseOperation,
 )
 
 __all__ = [
@@ -37,5 +37,5 @@ __all__ = [
     "RenameModel",
     "RunPython",
     "SQLOperation",
-    "TortoiseOperation",
+    "RakkoOperation",
 ]

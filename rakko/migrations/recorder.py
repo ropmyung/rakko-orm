@@ -12,7 +12,7 @@ from rakko.models import Model
 
 
 class MigrationRecorder:
-    def __init__(self, connection, *, table_name: str = "tortoise_migrations") -> None:
+    def __init__(self, connection, *, table_name: str = "rakko_migrations") -> None:
         self.connection = connection
         self.table_name = table_name
         self.model = self._make_model(table_name)
@@ -30,7 +30,7 @@ class MigrationRecorder:
         return f'"{name}"'
 
     def _placeholder(self, pos: int) -> str:
-        if self._dialect == "mysql":
+        if self._dialect == "mysql" or "psycopg" in type(self.connection).__module__:
             return "%s"
         if self._dialect == "postgres":
             return f"${pos}"
@@ -86,19 +86,19 @@ class MigrationRecorder:
             return []
         return [MigrationKey(app_label=row["app"], name=row["name"]) for row in rows]
 
-    async def record_applied(self, app: str, name: str) -> None:
+    async def record_applied(self, app: str, name: str, *, using_db=None) -> None:
         applied_at = datetime.now(timezone.utc)
         query = (
             f"INSERT INTO {self._quote(self.table_name)} "  # nosec B608
             f"({self._quote('app')}, {self._quote('name')}, {self._quote('applied_at')}) "
             f"VALUES ({self._placeholder(1)}, {self._placeholder(2)}, {self._placeholder(3)})"
         )
-        await self.connection.execute_insert(query, [app, name, applied_at])
+        await (using_db or self.connection).execute_insert(query, [app, name, applied_at])
 
-    async def record_unapplied(self, app: str, name: str) -> None:
+    async def record_unapplied(self, app: str, name: str, *, using_db=None) -> None:
         query = (
             f"DELETE FROM {self._quote(self.table_name)} "  # nosec B608
             f"WHERE {self._quote('app')} = {self._placeholder(1)} "
             f"AND {self._quote('name')} = {self._placeholder(2)}"
         )
-        await self.connection.execute_query(query, [app, name])
+        await (using_db or self.connection).execute_query(query, [app, name])

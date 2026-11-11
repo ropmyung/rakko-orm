@@ -16,6 +16,19 @@ This file summarizes Rakko-specific changes. The project began as a fork of
 `Tortoise ORM <https://github.com/tortoise/tortoise-orm>`_; upstream releases
 are not presented as Rakko release history.
 
+Migration fixes
+~~~~~~~~~~~~~~~
+
+* Generate Rakko imports and restore dictionary metadata in historical models.
+* Preserve explicit automatic integer fields, UNSIGNED and source-column names.
+* Accept expression CHECK conditions, conditional UNIQUE predicates and field
+  references in UNIQUE/index declarations; serialize portable PyPika nodes.
+* Use Rakko CLI configuration, operation and recorder names.
+* Correct MySQL type changes, psycopg placeholders and the Windows CLI event loop.
+* Preserve SQLite foreign-key data, constraints and indexes during table rebuilds.
+* Commit transactional schema/history changes together and keep dry runs read-only.
+* Add CLI regressions and live MySQL/PostgreSQL migration checks to CI and releases.
+
 Model and query API
 ~~~~~~~~~~~~~~~~~~~
 
@@ -51,4 +64,4 @@ Next work
 ~~~~~~~~~
 
 An explicit JOIN builder, broader live-database validation, and adaptation of
-inherited migration/integration tooling remain follow-up work.
+remaining framework integrations and broader backend validation remain follow-up work.

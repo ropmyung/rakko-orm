@@ -112,7 +112,7 @@ class AppConfig:
 
 
 @dataclass(frozen=True)
-class TortoiseConfig:
+class RakkoConfig:
     connections: dict[str, ConnectionConfig | DBUrlConfig]
     apps: dict[str, AppConfig]
     routers: list[str | type] | None = None
@@ -121,7 +121,7 @@ class TortoiseConfig:
 
     def __post_init__(self) -> None:
         if not isinstance(self.connections, dict) or not self.connections:
-            raise ConfigurationError("TortoiseConfig.connections must be a non-empty dict")
+            raise ConfigurationError("RakkoConfig.connections must be a non-empty dict")
         for name, conn in self.connections.items():
             if not isinstance(name, str) or not name:
                 raise ConfigurationError("Connection names must be non-empty strings")
@@ -131,7 +131,7 @@ class TortoiseConfig:
                 )
 
         if not isinstance(self.apps, dict) or not self.apps:
-            raise ConfigurationError("TortoiseConfig.apps must be a non-empty dict")
+            raise ConfigurationError("RakkoConfig.apps must be a non-empty dict")
         for name, app in self.apps.items():
             if not isinstance(name, str) or not name:
                 raise ConfigurationError("App names must be non-empty strings")
@@ -144,16 +144,16 @@ class TortoiseConfig:
 
         if self.routers is not None:
             if not isinstance(self.routers, list):
-                raise ConfigurationError("TortoiseConfig.routers must be a list or None")
+                raise ConfigurationError("RakkoConfig.routers must be a list or None")
             for router in self.routers:
                 if not isinstance(router, (str, type)):
                     raise ConfigurationError("Routers must be str or type")
 
         if self.use_tz is not None and not isinstance(self.use_tz, bool):
-            raise ConfigurationError("TortoiseConfig.use_tz must be a bool or None")
+            raise ConfigurationError("RakkoConfig.use_tz must be a bool or None")
 
         if self.timezone is not None and not isinstance(self.timezone, str):
-            raise ConfigurationError("TortoiseConfig.timezone must be a string or None")
+            raise ConfigurationError("RakkoConfig.timezone must be a string or None")
 
     def to_dict(self) -> dict[str, Any]:
         connections = {name: conn.to_config() for name, conn in self.connections.items()}
@@ -173,7 +173,7 @@ class TortoiseConfig:
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Self:
         if not isinstance(data, Mapping):
-            raise ConfigurationError("TortoiseConfig must be created from a mapping")
+            raise ConfigurationError("RakkoConfig must be created from a mapping")
 
         if "connections" not in data:
             raise ConfigurationError('Config must define "connections" section')
@@ -204,7 +204,7 @@ class TortoiseConfig:
         routers = data.get("routers")
         if routers is not None and not isinstance(routers, list):
             if isinstance(routers, str):
-                raise ConfigurationError("TortoiseConfig.routers must be a list or None")
+                raise ConfigurationError("RakkoConfig.routers must be a list or None")
             routers = list(routers)
 
         return cls(
@@ -224,7 +224,7 @@ class TortoiseConfig:
             config_file (str): Path to the configuration file. Supported extensions: .yml, .yaml, .json.
 
         Returns:
-            Self: The constructed TortoiseConfig.
+            Self: The constructed RakkoConfig.
 
         Raises:
             ConfigurationError: If the file is missing, unsupported, or contents are invalid.
@@ -249,10 +249,10 @@ class TortoiseConfig:
         cls, db_url: str, modules: dict[str, Iterable[str | ModuleType]]
     ) -> Self:
         """
-        Create a TortoiseConfig instance using a database URL and app modules mapping.
+        Create a RakkoConfig instance using a database URL and app modules mapping.
 
         This factory method builds a configuration dictionary using the provided database URL and modules,
-        and returns a TortoiseConfig instance based on that configuration.
+        and returns a RakkoConfig instance based on that configuration.
 
         Args:
             db_url: Database connection URL as a string.
@@ -261,7 +261,7 @@ class TortoiseConfig:
                 (as strings or Python module types) containing ORM models.
 
         Returns:
-            Self: The constructed TortoiseConfig instance.
+            Self: The constructed RakkoConfig instance.
 
         Raises:
             ConfigurationError: If the generated config is invalid.
@@ -278,26 +278,26 @@ class TortoiseConfig:
         modules: dict[str, Iterable[str | ModuleType]] | None = None,
     ) -> Self:
         """
-        Parse and resolve multiple configuration argument sources into a unified TortoiseConfig instance.
+        Parse and resolve multiple configuration argument sources into a unified RakkoConfig instance.
 
         Accepts (in order of priority):
-            - `config` dict or TortoiseConfig instance,
+            - `config` dict or RakkoConfig instance,
             - `config_file` path,
             - or both `db_url` and `modules`.
 
         Args:
-            config (dict[str, Any] | TortoiseConfig | None):
+            config (dict[str, Any] | RakkoConfig | None):
             config_file (str | None): Path to a config YAML or JSON file.
             db_url (str | None): Database URL for config generation.
             modules (dict[str, Iterable[str | ModuleType]] | None): App modules for config generation.
         Args:
-            config: A configuration dict or TortoiseConfig instance.
+            config: A configuration dict or RakkoConfig instance.
             config_file: Path to config file.
             db_url: Database URL for config generation.
             modules: App modules for config generation.
 
         Returns:
-            TortoiseConfig instance with resolved configuration.
+            RakkoConfig instance with resolved configuration.
 
         Raises:
             ConfigurationError: If arguments are invalid or conflicting.
@@ -313,3 +313,6 @@ class TortoiseConfig:
         raise ConfigurationError(
             "Must provide either 'config', 'config_file', or both 'db_url' and 'modules'"
         )
+
+
+TortoiseConfig = RakkoConfig

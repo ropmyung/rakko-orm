@@ -33,11 +33,11 @@ except ImportError:
     ptpython_embed = None
     HAS_PTPYTHON = False
 
-from rakko import Tortoise, __version__
+from rakko import Rakko, __version__
 from rakko.cli import utils
-from rakko.config import AppConfig, TortoiseConfig
+from rakko.config import AppConfig, RakkoConfig
 from rakko.connection import get_connection
-from rakko.context import TortoiseContext
+from rakko.context import RakkoContext
 from rakko.migrations.api import migrate as migrate_api
 from rakko.migrations.api import sqlmigrate as sqlmigrate_api
 from rakko.migrations.autodetector import MigrationAutodetector
@@ -98,7 +98,7 @@ def _launch_ipython_shell(namespace: dict[str, Any]) -> None:
         from IPython.terminal.embed import InteractiveShellEmbed  # type: ignore[import-not-found]
 
         model_names = [
-            k for k in namespace.keys() if k not in ("Tortoise", "tortoise", "connections", "apps")
+            k for k in namespace.keys() if k not in ("Rakko", "rakko", "connections", "apps")
         ]
         models_info = (
             f"Available models: {', '.join(model_names)}" if model_names else "No models loaded"
@@ -133,7 +133,7 @@ async def _launch_ptpython_shell(namespace: dict[str, Any]) -> None:
         _patch_loop_factory_for_ptpython()
 
     model_names = [
-        k for k in namespace.keys() if k not in ("Tortoise", "tortoise", "connections", "apps")
+        k for k in namespace.keys() if k not in ("Rakko", "rakko", "connections", "apps")
     ]
 
     # Print banner before launching ptpython
@@ -155,10 +155,10 @@ async def _launch_ptpython_shell(namespace: dict[str, Any]) -> None:
 
 
 @contextlib.asynccontextmanager
-async def tortoise_cli_context(
-    config: dict[str, Any] | TortoiseConfig,
-) -> AsyncGenerator[TortoiseContext, None]:
-    async with TortoiseContext() as ctx:
+async def rakko_cli_context(
+    config: dict[str, Any] | RakkoConfig,
+) -> AsyncGenerator[RakkoContext, None]:
+    async with RakkoContext() as ctx:
         await ctx.init(config=config)
         yield ctx
 
@@ -174,26 +174,26 @@ class _NoopRecorder(MigrationRecorder):
         return None
 
 
-def _load_config(ctx: CLIContext) -> TortoiseConfig:
-    """Load Tortoise ORM configuration from various sources.
+def _load_config(ctx: CLIContext) -> RakkoConfig:
+    """Load Rakko ORM configuration from various sources.
 
     Returns:
-        TortoiseConfig: Validated configuration object
+        RakkoConfig: Validated configuration object
     """
     if config_file := ctx.config_file:
-        return TortoiseConfig.from_config_file(config_file)
-    config_value = ctx.config or utils.tortoise_orm_config()
+        return RakkoConfig.from_config_file(config_file)
+    config_value = ctx.config or utils.rakko_orm_config()
     if not config_value:
         raise utils.CLIUsageError(
-            "You must specify TORTOISE_ORM in option or env, or pyproject.toml [tool.tortoise]",
+            "You must specify RAKKO_ORM in option or env, or pyproject.toml [tool.rakko]",
         )
-    return utils.get_tortoise_config(config_value)
+    return utils.get_rakko_config(config_value)
 
 
-def _select_apps(config: TortoiseConfig, app_labels: Iterable[str] | None) -> dict[str, AppConfig]:
+def _select_apps(config: RakkoConfig, app_labels: Iterable[str] | None) -> dict[str, AppConfig]:
     """Select specific apps from config, or all if no labels specified."""
     if not config.apps:
-        raise utils.CLIError("No apps configured in TORTOISE_ORM")
+        raise utils.CLIError("No apps configured in RAKKO_ORM")
     if not app_labels:
         return dict(config.apps)
     selected: dict[str, AppConfig] = {}
@@ -377,7 +377,7 @@ async def init(ctx: CLIContext, app_labels: tuple[str, ...]) -> None:
 
 
 async def shell(ctx: CLIContext) -> None:
-    """Launch an interactive shell with Tortoise ORM context.
+    """Launch an interactive shell with Rakko ORM context.
 
     Prefers IPython if available, falls back to ptpython.
     Requires at least one shell provider to be installed.
@@ -391,8 +391,8 @@ async def shell(ctx: CLIContext) -> None:
     if provider is None:
         raise utils.CLIError(
             "No interactive shell available. Please install one of the following:\n"
-            "  - IPython (recommended): pip install tortoise-orm[ipython]\n"
-            "  - ptpython: pip install tortoise-orm[ptpython]\n"
+            "  - IPython (recommended): pip install rakko-orm[ipython]\n"
+            "  - ptpython: pip install rakko-orm[ptpython]\n"
             "  - Or install directly: pip install ipython (or ptpython)"
         )
 
@@ -401,16 +401,16 @@ async def shell(ctx: CLIContext) -> None:
     # For IPython: Initialize context, prepare namespace, then launch synchronously
     # IPython manages its own event loop for autoawait
     if provider == ShellProvider.IPYTHON:
-        async with tortoise_cli_context(config) as tortoise_ctx:
-            # Prepare namespace with Tortoise context and useful imports
+        async with rakko_cli_context(config) as rakko_ctx:
+            # Prepare namespace with Rakko context and useful imports
             namespace = {
-                "Tortoise": Tortoise,
-                "tortoise": tortoise_ctx,
-                "apps": tortoise_ctx.apps,
+                "Rakko": Rakko,
+                "rakko": rakko_ctx,
+                "apps": rakko_ctx.apps,
             }
             # Add all models to namespace for easy access
-            if tortoise_ctx.apps:
-                for app_name, models_dict in tortoise_ctx.apps.items():
+            if rakko_ctx.apps:
+                for app_name, models_dict in rakko_ctx.apps.items():
                     for model_name, model_class in models_dict.items():
                         namespace[model_name] = model_class
 
@@ -418,16 +418,16 @@ async def shell(ctx: CLIContext) -> None:
             _launch_ipython_shell(namespace)
     else:
         # ptpython works fine in async context
-        async with tortoise_cli_context(config) as tortoise_ctx:
-            # Prepare namespace with Tortoise context and useful imports
+        async with rakko_cli_context(config) as rakko_ctx:
+            # Prepare namespace with Rakko context and useful imports
             namespace = {
-                "Tortoise": Tortoise,
-                "tortoise": tortoise_ctx,
-                "apps": tortoise_ctx.apps,
+                "Rakko": Rakko,
+                "rakko": rakko_ctx,
+                "apps": rakko_ctx.apps,
             }
             # Add all models to namespace for easy access
-            if tortoise_ctx.apps:
-                for app_name, models_dict in tortoise_ctx.apps.items():
+            if rakko_ctx.apps:
+                for app_name, models_dict in rakko_ctx.apps.items():
                     for model_name, model_class in models_dict.items():
                         namespace[model_name] = model_class
 
@@ -439,20 +439,20 @@ async def makemigrations(
 ) -> None:
     if empty and not app_labels:
         raise utils.CLIUsageError("--empty requires at least one APP_LABEL")
-    tortoise_config = _load_config(ctx)
-    apps_config = _select_apps(tortoise_config, app_labels or None)
+    rakko_config = _load_config(ctx)
+    apps_config = _select_apps(rakko_config, app_labels or None)
 
     apps_dict = {label: app.to_dict() for label, app in apps_config.items()}
     for label, app_config in apps_dict.items():
         migrations_module, _ = _ensure_migrations_package(label, app_config)
         app_config["migrations"] = migrations_module
 
-    config_dict = tortoise_config.to_dict()
+    config_dict = rakko_config.to_dict()
     config_dict["apps"] = apps_dict
 
-    async with tortoise_cli_context(config_dict) as orm_context:
+    async with rakko_cli_context(config_dict) as orm_context:
         if not orm_context.apps:
-            raise utils.CLIError("Tortoise apps are not initialized")
+            raise utils.CLIError("Rakko apps are not initialized")
         autodetector = MigrationAutodetector(orm_context.apps, apps_dict)
         if empty:
             await autodetector.loader.build_graph()
@@ -533,7 +533,7 @@ async def _run_migrate(
                 raise utils.CLIUsageError("MIGRATION requires APP_LABEL")
             target = f"{app_label}.{migration}"
 
-    async with tortoise_cli_context(config):
+    async with rakko_cli_context(config):
         await migrate_api(
             config=config,
             app_labels=None,
@@ -603,15 +603,15 @@ async def downgrade(
 
 
 async def history(ctx: CLIContext, app_labels: tuple[str, ...]) -> None:
-    tortoise_config = _load_config(ctx)
-    apps_config = _select_apps(tortoise_config, app_labels or None)
+    rakko_config = _load_config(ctx)
+    apps_config = _select_apps(rakko_config, app_labels or None)
     apps_dict = {label: app.to_dict() for label, app in apps_config.items()}
     apps_by_connection = _group_apps_by_connection(apps_dict)
 
-    config_dict = tortoise_config.to_dict()
+    config_dict = rakko_config.to_dict()
     config_dict["apps"] = apps_dict
 
-    async with tortoise_cli_context(config_dict):
+    async with rakko_cli_context(config_dict):
         for connection_name, subset in apps_by_connection.items():
             recorder = MigrationRecorder(get_connection(connection_name))
             applied = await recorder.applied_migrations()
@@ -619,8 +619,8 @@ async def history(ctx: CLIContext, app_labels: tuple[str, ...]) -> None:
 
 
 async def heads(ctx: CLIContext, app_labels: tuple[str, ...]) -> None:
-    tortoise_config = _load_config(ctx)
-    apps_config = _select_apps(tortoise_config, app_labels or None)
+    rakko_config = _load_config(ctx)
+    apps_config = _select_apps(rakko_config, app_labels or None)
     apps_dict = {label: app.to_dict() for label, app in apps_config.items()}
     apps_by_connection = _group_apps_by_connection(apps_dict)
 
@@ -694,7 +694,7 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "-c",
         "--config",
-        help="Rakko config dictionary path, like settings.TORTOISE_ORM",
+        help="Rakko config dictionary path, like settings.RAKKO_ORM",
     )
     parser.add_argument(
         "--config-file",
@@ -871,7 +871,8 @@ async def run_cli_async(argv: list[str] | None = None) -> int:
 def main() -> None:
     if sys.path[0] != ".":
         sys.path.insert(0, ".")
-    raise SystemExit(asyncio.run(run_cli_async()))
+    loop_factory = asyncio.SelectorEventLoop if sys.platform == "win32" else None
+    raise SystemExit(asyncio.run(run_cli_async(), loop_factory=loop_factory))
 
 
 if __name__ == "__main__":

@@ -14,7 +14,10 @@ on:
 permissions:
   contents: read
 jobs:
+  database-migrations:
+    uses: ./.github/workflows/migrations.yml
   build:
+    needs: database-migrations
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

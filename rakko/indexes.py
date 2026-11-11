@@ -4,13 +4,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, cast
 
 from pypika_tortoise.context import DEFAULT_SQL_CONTEXT
 from pypika_tortoise.terms import Term, ValueWrapper
 
 from rakko.exceptions import ConfigurationError
-from rakko.expressions import Expression, ResolveContext
+from rakko.expressions import Expression, FieldReference, ResolveContext, field_name
 
 if TYPE_CHECKING:
     from rakko.backends.base.schema_generator import BaseSchemaGenerator
@@ -32,7 +33,7 @@ class Index:
     def __init__(
         self,
         *expressions: Term | Expression,
-        fields: tuple[str, ...] | list[str] | None = None,
+        fields: Sequence[FieldReference] | None = None,
         name: str | None = None,
     ) -> None:
         self.fields = list(fields or [])
@@ -76,9 +77,16 @@ class Index:
     def get_sql(self, schema_generator: BaseSchemaGenerator, model: type[Model], safe: bool) -> str:
         self.resolve_expressions(model)
         # This function is required by aerich
+        columns = self.field_names
+        if self.fields:
+            columns = [
+                model._meta.fields_map[name].source_field or name
+                if name in model._meta.fields_map else name
+                for name in columns
+            ]
         return schema_generator._get_index_sql(
             model,
-            self.field_names,
+            columns,
             safe,
             index_name=self.name,
             index_type=self.INDEX_TYPE,
@@ -86,7 +94,12 @@ class Index:
         )
 
     def resolve_expressions(self, model: type[Model]) -> None:
-        if self._expressions_resolved or not self.expressions:
+        if self._expressions_resolved:
+            return
+        if self.fields:
+            self.fields = [field_name(value, model, local=True) for value in self.fields]
+        if not self.expressions:
+            self._expressions_resolved = True
             return
         if not any(isinstance(expression, Expression) for expression in self.expressions):
             self._expressions_resolved = True
@@ -110,7 +123,9 @@ class Index:
     @property
     def field_names(self) -> list[str]:
         if self.fields:
-            return list(self.fields)
+            if not all(isinstance(value, str) for value in self.fields):
+                raise ConfigurationError("Index field references must be resolved first")
+            return cast(list[str], list(self.fields))
         elif self.expressions:
             if any(isinstance(expression, Expression) for expression in self.expressions):
                 raise ConfigurationError(

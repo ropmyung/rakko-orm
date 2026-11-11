@@ -480,7 +480,32 @@ class BaseSchemaGenerator(SchemaQuotingMixin):
                     self._get_unique_constraint_sql(model, unique_together_to_create)
                 )
 
+        from rakko.expressions import field_name
+        from rakko.migrations.constraints import CheckConstraint, UniqueConstraint
+
+        constraint_indexes = []
+        for constraint in model._meta.constraints:
+            if isinstance(constraint, CheckConstraint):
+                condition = constraint.get_sql(model, self.client.query_class.SQL_CONTEXT)
+                fields_to_create.append(f'CONSTRAINT {self.quote(constraint.name)} CHECK ({condition})')
+            elif isinstance(constraint, UniqueConstraint):
+                columns = []
+                for value in constraint.fields:
+                    field = model._meta.fields_map[field_name(value, model, local=True)]
+                    columns.append(field.source_field or field.model_field_name)
+                name = constraint.name or self._get_index_name("uid", model, columns)
+                if constraint.condition is None:
+                    fields_to_create.append(self.UNIQUE_CONSTRAINT_CREATE_TEMPLATE.format(
+                        index_name=name, fields=", ".join(self.quote(column) for column in columns),
+                    ))
+                else:
+                    if self.DIALECT not in {"postgres", "sqlite"}:
+                        raise NotImplementedError(f'Conditional unique constraints are not supported on {self.DIALECT}')
+                    condition = constraint.get_condition_sql(model, self.client.query_class.SQL_CONTEXT)
+                    constraint_indexes.append(f'CREATE UNIQUE INDEX {self.quote(name)} ON {qualified_table_name} ({", ".join(self.quote(column) for column in columns)}) WHERE {condition};')
+
         field_indexes_sqls = self._get_field_indexes_sqls(model, fields_with_index, safe)
+        field_indexes_sqls.extend(constraint_indexes)
 
         fields_to_create.extend(self._get_inner_statements())
 

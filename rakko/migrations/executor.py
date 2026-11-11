@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable, Iterable
+from contextlib import nullcontext
 from dataclasses import dataclass
 
 from rakko.backends.base.client import BaseDBAsyncClient
@@ -63,7 +64,8 @@ class MigrationExecutor:
         # Create a non-atomic schema editor for recorder operations only
         recorder_schema_editor = self._schema_editor(atomic=False)
         self._logger.debug("Ensuring migration schema")
-        await self.recorder.ensure_schema(recorder_schema_editor)
+        if not dry_run:
+            await self.recorder.ensure_schema(recorder_schema_editor)
 
         self._logger.debug("Loading applied migrations")
         applied = set(await self.recorder.applied_migrations())
@@ -88,18 +90,9 @@ class MigrationExecutor:
                 if not fake:
                     self._emit(progress, "rollback_start", key)
                     schema_editor = self._schema_editor(atomic=step.migration.atomic)
-                    if schema_editor.atomic_migration:
-                        async with in_transaction(self.connection.connection_name) as txn_client:
-                            schema_editor.client = txn_client
-                            await step.migration.unapply(
-                                state_before, dry_run=dry_run, schema_editor=schema_editor
-                            )
-                    else:
-                        await step.migration.unapply(
-                            state_before, dry_run=dry_run, schema_editor=schema_editor
-                        )
+                    await self._run_migration(step, state_before, schema_editor, dry_run=dry_run)
                     self._emit(progress, "rollback_done", key)
-                if not dry_run:
+                if not dry_run and fake:
                     await self.recorder.record_unapplied(key.app_label, key.name)
                 applied.discard(key)
                 state_cache = None
@@ -109,20 +102,41 @@ class MigrationExecutor:
                 if not fake:
                     self._emit(progress, "apply_start", key)
                     schema_editor = self._schema_editor(atomic=step.migration.atomic)
-                    if schema_editor.atomic_migration:
-                        async with in_transaction(self.connection.connection_name) as txn_client:
-                            schema_editor.client = txn_client
-                            await step.migration.apply(
-                                state_cache, dry_run=dry_run, schema_editor=schema_editor
-                            )
-                    else:
-                        await step.migration.apply(
-                            state_cache, dry_run=dry_run, schema_editor=schema_editor
-                        )
+                    await self._run_migration(step, state_cache, schema_editor, dry_run=dry_run)
                     self._emit(progress, "apply_done", key)
-                if not dry_run:
+                if not dry_run and fake:
                     await self.recorder.record_applied(key.app_label, key.name)
                 applied.add(key)
+
+    async def _run_migration(
+        self, step: PlanStep, state: State, editor: BaseSchemaEditor, *, dry_run: bool
+    ) -> None:
+        from rakko.exceptions import IntegrityError
+
+        foreign_keys = False
+        if isinstance(editor, SqliteSchemaEditor) and not dry_run:
+            _, rows = await self.connection.execute_query("PRAGMA foreign_keys")
+            foreign_keys = bool(rows[0]["foreign_keys"])
+            if foreign_keys:
+                await self.connection.execute_query("PRAGMA foreign_keys=OFF")
+        run = step.migration.unapply if step.backward else step.migration.apply
+        try:
+            async with (
+                in_transaction(self.connection.connection_name)
+                if editor.atomic_migration else nullcontext(self.connection)
+            ) as client:
+                editor.client = client
+                await run(state, dry_run=dry_run, schema_editor=editor)
+                if foreign_keys:
+                    _, violations = await client.execute_query("PRAGMA foreign_key_check")
+                    if violations:
+                        raise IntegrityError("Migration violates foreign key constraints")
+                if not dry_run:
+                    record = self.recorder.record_unapplied if step.backward else self.recorder.record_applied
+                    await record(step.migration.app_label, step.migration.name, using_db=client)
+        finally:
+            if foreign_keys:
+                await self.connection.execute_query("PRAGMA foreign_keys=ON")
 
     async def plan(self, targets: Iterable[MigrationTarget] | None = None) -> list[PlanStep]:
         await self.loader.build_graph()

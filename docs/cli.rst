@@ -16,13 +16,15 @@ The retained command set includes ``init``, ``makemigrations``, ``migrate``,
 ``upgrade``, ``downgrade``, ``history``, ``heads``, ``sqlmigrate`` and ``shell``.
 Consult command-specific help for options.
 
-Configuration compatibility
----------------------------
+Configuration
+-------------
 
-The resolver still recognizes ``TORTOISE_ORM`` and the ``[tool.tortoise]`` /
-``tortoise_orm`` configuration keys. These are retained names, not instructions
-to install another ORM. Config objects live in ``rakko.config``.
+Use ``RAKKO_ORM`` and ``[tool.rakko]`` / ``rakko_orm`` for automatic configuration
+lookup. ``-c module.VARIABLE`` accepts an explicit config variable; JSON and YAML
+config files are accepted with ``--config-file``. The typed configuration class
+is ``rakko.config.RakkoConfig``.
 
-The executable and help identify Rakko. No published repository or deployment
-URL is assumed by the documentation. See :doc:`migration` for the migration
-layer's adaptation/validation status.
+Migration records live in ``rakko_migrations``. Shell helpers expose ``Rakko``
+and ``rakko``; install the optional ``ipython`` or ``ptpython`` extra for a shell.
+On Windows the CLI uses a selector event loop, which also supports psycopg.
+See :doc:`migration` for the complete migration workflow and validation scope.

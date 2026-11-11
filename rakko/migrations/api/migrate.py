@@ -8,15 +8,15 @@ import inspect
 from collections.abc import Callable, Sequence
 from typing import Any
 
-from rakko import Tortoise
-from rakko.config import TortoiseConfig
+from rakko import Rakko
+from rakko.config import RakkoConfig
 from rakko.connection import get_connection
 from rakko.migrations.executor import MigrationExecutor, MigrationTarget, PlanStep
 
 
 async def migrate(
     *,
-    config: dict[str, Any] | TortoiseConfig | None = None,
+    config: dict[str, Any] | RakkoConfig | None = None,
     config_file: str | None = None,
     app_labels: Sequence[str] | None = None,
     target: str | None = None,
@@ -27,11 +27,11 @@ async def migrate(
     progress: Callable[[str, str, str], object] | None = None,
 ) -> None:
     """Run migrations for configured apps."""
-    config = TortoiseConfig.resolve_args(config, config_file).to_dict()
+    config = RakkoConfig.resolve_args(config, config_file).to_dict()
     if not config:
         raise ValueError("migrate requires a config or config_file")
 
-    await Tortoise.init(config=config, init_connections=False)
+    await Rakko.init(config=config, init_connections=False)
 
     configured_apps = config.get("apps", {})
     selected_apps = list(app_labels) if app_labels else list(configured_apps.keys())

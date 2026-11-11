@@ -55,9 +55,9 @@ package metadata and the README.
 ## Release limits
 
 This is an alpha release. SQLite execution and generated MySQL/PostgreSQL SQL
-are covered by the current suite. Generated SQL checks do not replace live
-MySQL/PostgreSQL integration tests. Inherited migration and framework integration
-APIs remain under adaptation; the docs record their current status.
+are covered by the current suite. Migration tests also run against MySQL 8.4 and PostgreSQL 16.
+SQL Server/Oracle migration editors and further framework integrations need
+additional validation; the docs record the tested scope.
 
 Local release preparation does not publish to PyPI, create a GitHub release,
 reserve a package name or establish a public documentation site.

@@ -15,12 +15,10 @@ try:
     import asyncmy as mysql  # type: ignore[import-not-found]
     from asyncmy import errors  # type: ignore[import-not-found]
     from asyncmy.charset import charset_by_name  # type: ignore[import-not-found]
-    from asyncmy.constants import COMMAND  # type: ignore[import-not-found]
 except ImportError:
     import aiomysql as mysql
     from pymysql import err as errors
     from pymysql.charset import charset_by_name
-    from pymysql.constants import COMMAND
 
 from pypika_tortoise import MySQLQuery
 
@@ -52,8 +50,11 @@ def translate_exceptions[**P, R](func: FuncType[P, R]) -> FuncType[P, R]:
     async def translate_exceptions_(*args: P.args, **kwargs: P.kwargs) -> R:
         try:
             return await func(*args, **kwargs)
+        except errors.OperationalError as exc:
+            if exc.args and exc.args[0] == 3819:
+                raise IntegrityError(exc) from exc
+            raise OperationalError(exc) from exc
         except (
-            errors.OperationalError,
             errors.ProgrammingError,
             errors.DataError,
             errors.InternalError,
@@ -155,8 +156,7 @@ class MySQLClient(BaseDBAsyncClient):
 
     async def _expire_connections(self) -> None:
         if self._pool:  # pragma: nobranch
-            for conn in self._pool._free:
-                conn._reader.set_exception(EOFError("EOF"))
+            await self._pool.clear()
 
     async def _close(self) -> None:
         if self._pool:  # pragma: nobranch
@@ -274,8 +274,7 @@ class TransactionWrapper(MySQLClient, TransactionalDBClient):
     @translate_exceptions
     async def savepoint(self) -> None:
         self._savepoint = _gen_savepoint_name()
-        await self._connection._execute_command(COMMAND.COM_QUERY, f"SAVEPOINT {self._savepoint}")
-        await self._connection._read_ok_packet()
+        await self._connection.query(f'SAVEPOINT {self._savepoint}')
 
     async def rollback(self) -> None:
         if self._finalized:
@@ -288,10 +287,7 @@ class TransactionWrapper(MySQLClient, TransactionalDBClient):
             raise TransactionManagementError("Transaction already finalised")
         if self._savepoint is None:
             raise TransactionManagementError("No savepoint to rollback to")
-        await self._connection._execute_command(
-            COMMAND.COM_QUERY, f"ROLLBACK TO SAVEPOINT {self._savepoint}"
-        )
-        await self._connection._read_ok_packet()
+        await self._connection.query(f'ROLLBACK TO SAVEPOINT {self._savepoint}')
         self._savepoint = None
         self._finalized = True
 
@@ -300,13 +296,10 @@ class TransactionWrapper(MySQLClient, TransactionalDBClient):
             raise TransactionManagementError("Transaction already finalised")
         if self._savepoint is None:
             raise TransactionManagementError("No savepoint to release")
-        await self._connection._execute_command(
-            COMMAND.COM_QUERY, f"RELEASE SAVEPOINT {self._savepoint}"
-        )
-        await self._connection._read_ok_packet()
+        await self._connection.query(f'RELEASE SAVEPOINT {self._savepoint}')
         self._savepoint = None
         self._finalized = True
 
 
 def _gen_savepoint_name(_c=count()) -> str:
-    return f"tortoise_savepoint_{next(_c)}"
+    return f'rakko_savepoint_{next(_c)}'

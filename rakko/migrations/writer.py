@@ -19,6 +19,23 @@ from pathlib import Path
 from typing import Any
 
 from pypika_tortoise.context import DEFAULT_SQL_CONTEXT
+from pypika_tortoise.terms import (
+    ArithmeticExpression,
+    BasicCriterion,
+    ContainsCriterion,
+    Function,
+    Negative,
+    Not,
+    NullCriterion,
+    NullValue,
+    RangeCriterion,
+    Term,
+    Tuple,
+    ValueWrapper,
+)
+from pypika_tortoise.terms import (
+    Field as SQLField,
+)
 
 from rakko.fields.base import Field
 from rakko.indexes import Index
@@ -96,13 +113,13 @@ class ImportManager:
         for module, names in sorted(self.imports.items()):
             lines.append(f"from {module} import {', '.join(sorted(names))}")
         if self.uses_fields_module:
-            lines.append("from tortoise import fields")
+            lines.append("from rakko import fields")
         if self.uses_indexes:
             index_names = ", ".join(sorted(self.uses_indexes))
-            lines.append(f"from tortoise.indexes import {index_names}")
+            lines.append(f"from rakko.indexes import {index_names}")
         if self.uses_constraints:
             constraint_names = ", ".join(sorted(self.uses_constraints))
-            lines.append(f"from tortoise.migrations.constraints import {constraint_names}")
+            lines.append(f"from rakko.migrations.constraints import {constraint_names}")
         return lines
 
 
@@ -140,17 +157,19 @@ def render_value(value: Any, imports: ImportManager) -> str:
     from rakko.fields.db_defaults import Now, RandomHex, SqlDefault
 
     if isinstance(value, Now):
-        imports.add_from("tortoise.fields.db_defaults", "Now")
+        imports.add_from("rakko.fields.db_defaults", "Now")
         return "Now()"
     if isinstance(value, RandomHex):
-        imports.add_from("tortoise.fields.db_defaults", "RandomHex")
+        imports.add_from("rakko.fields.db_defaults", "RandomHex")
         return "RandomHex()"
     if isinstance(value, SqlDefault):
-        imports.add_from("tortoise.fields.db_defaults", "SqlDefault")
+        imports.add_from("rakko.fields.db_defaults", "SqlDefault")
         return f"SqlDefault({value.sql!r})"
+    if isinstance(value, Term):
+        return _render_term(value, imports)
     if hasattr(value, "get_sql") and callable(value.get_sql):
         sql = value.get_sql(DEFAULT_SQL_CONTEXT)
-        imports.add_from("tortoise.migrations.expressions", "RawSQLTerm")
+        imports.add_from("rakko.migrations.expressions", "RawSQLTerm")
         return f"RawSQLTerm({sql!r})"
     if isinstance(value, list):
         return "[" + ", ".join(render_value(item, imports) for item in value) + "]"
@@ -224,25 +243,65 @@ def render_value(value: Any, imports: ImportManager) -> str:
     return repr(value)
 
 
+def _render_term(value: Term, imports: ImportManager) -> str:
+    """Preserve a native expression tree so migrations remain dialect independent."""
+    term_type = type(value)
+    match value:
+        case SQLField():
+            term_type, args = SQLField, [value.name]
+        case BasicCriterion():
+            args = [value.comparator, value.left, value.right]
+        case ArithmeticExpression():
+            args = [value.operator, value.left, value.right]
+        case ContainsCriterion():
+            args = [value.term, value.container]
+        case RangeCriterion():
+            args = [value.term, value.start, value.end]
+        case NullCriterion() | Negative() | Not():
+            args = [value.term]
+        case NullValue():
+            args = []
+        case ValueWrapper():
+            args = [value.value]
+        case Tuple():
+            args = list(value.values)
+        case Function():
+            if (
+                type(value).get_special_params_sql is not Function.get_special_params_sql
+                or type(value).get_function_sql is not Function.get_function_sql
+                or type(value).get_sql is not Function.get_sql
+                or value.schema is not None
+            ):
+                raise ValueError(f'Cannot serialize SQL function {term_type.__name__}')
+            args = [value.name, *value.args] if term_type is Function else list(value.args)
+        case _:
+            raise ValueError(f'Cannot serialize SQL expression {type(value).__name__}')
+    imports.add_from(term_type.__module__, term_type.__name__)
+    expression = f'{term_type.__name__}({", ".join(render_value(arg, imports) for arg in args)})'
+    if isinstance(value, ContainsCriterion) and value._is_negated:
+        expression += ".negate()"
+    return expression
+
+
 def _render_call(path: str, args: list[Any], kwargs: dict[str, Any], imports: ImportManager) -> str:
-    if path.startswith("tortoise.fields."):
+    if path.startswith("rakko.fields."):
         class_name = path.rsplit(".", 1)[1]
         # Render FieldInstance classes as their public Field name
         if class_name.endswith("FieldInstance"):
             class_name = class_name.replace("FieldInstance", "Field")
             # For relational fields, move model_name to first positional arg
-            if path.startswith("tortoise.fields.relational.") and "model_name" in kwargs:
+            if path.startswith("rakko.fields.relational.") and "model_name" in kwargs:
                 args = [kwargs.pop("model_name")] + list(args)
         imports.add_fields_alias()
         callee = f"fields.{class_name}"
-    elif path.startswith("tortoise.indexes."):
+    elif path.startswith("rakko.indexes."):
         class_name = path.rsplit(".", 1)[1]
         imports.add_index_class(class_name)
         callee = class_name
-    elif path == "tortoise.migrations.constraints.UniqueConstraint":
+    elif path == "rakko.migrations.constraints.UniqueConstraint":
         imports.add_constraint_class("UniqueConstraint")
         callee = "UniqueConstraint"
-    elif path == "tortoise.migrations.constraints.CheckConstraint":
+    elif path == "rakko.migrations.constraints.CheckConstraint":
         imports.add_constraint_class("CheckConstraint")
         callee = "CheckConstraint"
     else:
@@ -294,8 +353,8 @@ class MigrationWriter:
             operations.extend(self._format_operation(operation, imports, indent=" " * 8))
 
         lines: list[str] = [
-            "from tortoise import migrations",
-            "from tortoise.migrations import operations as ops",
+            "from rakko import migrations",
+            "from rakko.migrations import operations as ops",
         ]
         extra_imports = imports.render()
         if extra_imports:
@@ -480,16 +539,11 @@ class MigrationWriter:
     def _format_create_model(
         self, operation: CreateModel, imports: ImportManager, *, indent: str
     ) -> list[str]:
-        source_fields = {
-            field.source_field
-            for _, field in operation.fields
-            if isinstance(field, Field) and field.source_field
-        }
         field_lines = []
         for name, field in operation.fields:
             if field is None:
                 continue
-            if name in source_fields:
+            if isinstance(field, Field) and getattr(field, "reference", None) is not None:
                 continue
             field_expr = self._render_field(field, imports)
             field_lines.append(f"{indent}        ({name!r}, {field_expr}),")

@@ -49,8 +49,8 @@ if __name__ == "__main__":
 
 Ordinary constructor parameters are optional in static signatures; runtime
 validation and database constraints still apply. Updates modify supplied fields.
-SQL expressions use `pypika_tortoise`. An explicit JOIN builder and adaptation
-of inherited migration/integration tooling remain future work.
+SQL expressions use `pypika_tortoise`. An explicit JOIN builder and further framework integration work remain planned.
+Migration tests cover SQLite, MySQL and PostgreSQL application and reversal.
 
 SQLite works with the base package. MySQL drivers are available through the
 `aiomysql` and `asyncmy` extras. PostgreSQL drivers use `asyncpg` or `psycopg`.

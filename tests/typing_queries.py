@@ -8,6 +8,8 @@ from typing import Any, assert_type
 
 from rakko import Field, fields
 from rakko.expressions import Criterion, Query
+from rakko.indexes import Index
+from rakko.migrations.constraints import CheckConstraint, UniqueConstraint
 from tests.testmodels import Guild, Member, PositionalRecord
 
 
@@ -56,3 +58,8 @@ async def query_types(guild: Guild) -> None:
     await Member.all().only(Member.id, Member.name).first()
     await Member.all().values_list(Member.id)
     await Member.all().select_related(Member.guild).values(Member.name, Guild.name)
+
+
+check_constraint = CheckConstraint(check=lambda: Member.age >= 0, name="positive_age")
+unique_constraint = UniqueConstraint(fields=(Member.name,), condition=lambda: Member.age >= 18)
+model_index = Index(fields=(Member.age,))

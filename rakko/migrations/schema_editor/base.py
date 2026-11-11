@@ -4,10 +4,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from hashlib import sha256
 from typing import cast
 
 from rakko.backends.base.client import BaseDBAsyncClient
+from rakko.expressions import FieldReference, field_name
 from rakko.fields.base import Field
 from rakko.fields.relational import ForeignKeyFieldInstance, ManyToManyFieldInstance
 from rakko.indexes import Index
@@ -411,30 +413,8 @@ class BaseSchemaEditor(SchemaQuotingMixin):
                     self._get_unique_constraint_sql(model, unique_together_to_create)
                 )
 
-        _indexes = [self._get_index_sql(model, [field_name]) for field_name in fields_with_index]
-
-        if model._meta.indexes:
-            for index in model._meta.indexes:
-                if isinstance(index, Index):
-                    index_sql = self._get_index_sql(
-                        model,
-                        index.field_names,
-                        index_name=index.name,
-                        index_type=index.INDEX_TYPE,
-                        extra=index.extra,
-                    )
-                    if index_sql:
-                        _indexes.append(index_sql)
-                    continue
-
-                indexes_to_create: list[str] = []
-                for field in index:
-                    field_object = model._meta.fields_map[field]
-                    indexes_to_create.append(field_object.source_field or field)
-
-                _indexes.append(self._get_index_sql(model, indexes_to_create))
-
-        field_indexes_sqls = [val for val in list(dict.fromkeys(_indexes)) if val]
+        in_table_definitions.extend(self._get_inline_constraints(model))
+        field_indexes_sqls = self._get_model_index_sqls(model, fields_with_index)
 
         in_table_definitions.extend(self._get_inner_statements())
 
@@ -471,6 +451,53 @@ class BaseSchemaEditor(SchemaQuotingMixin):
             references=references,
             m2m_tables_sql=m2m_tables_for_create,
         )
+
+    def _get_inline_constraints(self, model: type[Model]) -> list[str]:
+        statements = []
+        for constraint in model._meta.constraints:
+            if isinstance(constraint, CheckConstraint):
+                statements.append(self.CHECK_CONSTRAINT_CREATE_TEMPLATE.format(
+                    name=constraint.name,
+                    check=constraint.get_sql(model, self.client.query_class.SQL_CONTEXT),
+                ))
+            elif isinstance(constraint, UniqueConstraint) and constraint.condition is None:
+                columns = self._resolve_fields_to_columns(model, constraint.fields)
+                statements.append(self.UNIQUE_CONSTRAINT_CREATE_TEMPLATE.format(
+                    index_name=self._constraint_name_for_model(model, constraint),
+                    fields=", ".join(self.quote(column) for column in columns),
+                ))
+        return statements
+
+    def _get_model_index_sqls(self, model: type[Model], indexed_fields: list[str]) -> list[str]:
+        statements = [self._get_index_sql(model, [name]) for name in indexed_fields]
+        for index in model._meta.indexes:
+            if isinstance(index, Index):
+                index.resolve_expressions(model)
+                columns = (
+                    index.field_names if index.expressions
+                    else self._resolve_fields_to_columns(model, index.field_names)
+                )
+                statements.append(self._get_index_sql(
+                    model, columns, index_name=index.name,
+                    index_type=index.INDEX_TYPE, extra=index.extra,
+                ))
+            else:
+                statements.append(self._get_index_sql(
+                    model, self._resolve_fields_to_columns(model, index),
+                ))
+        for constraint in model._meta.constraints:
+            if isinstance(constraint, UniqueConstraint) and constraint.condition is not None:
+                statements.append(self._get_partial_unique_sql(model, constraint))
+        return list(dict.fromkeys(statement for statement in statements if statement))
+
+    def _get_partial_unique_sql(self, model: type[Model], constraint: UniqueConstraint) -> str:
+        if self.DIALECT not in {"postgres", "sqlite"}:
+            raise NotImplementedError(f'Conditional unique constraints are not supported on {self.DIALECT}')
+        columns = self._resolve_fields_to_columns(model, constraint.fields)
+        name = self._constraint_name_for_model(model, constraint)
+        condition = constraint.get_condition_sql(model, self.client.query_class.SQL_CONTEXT)
+        table = self._qualify_table_name(model._meta.db_table, model._meta.schema)
+        return f'CREATE UNIQUE INDEX {self.quote(name)} ON {table} ({", ".join(self.quote(column) for column in columns)}) WHERE {condition};'
 
     async def create_schema(self, schema_name: str) -> None:
         """Create a database schema. Override in dialect-specific editors.
@@ -753,10 +780,12 @@ class BaseSchemaEditor(SchemaQuotingMixin):
     def _constraint_name_for_model(self, model: type[Model], constraint: UniqueConstraint) -> str:
         if constraint.name:
             return constraint.name
-        return self._get_unique_constraint_name(model, list(constraint.fields))
+        return self._get_unique_constraint_name(
+            model, [field_name(value, model, local=True) for value in constraint.fields]
+        )
 
     def _resolve_fields_to_columns(
-        self, model: type[Model], field_names: tuple[str, ...] | list[str]
+        self, model: type[Model], field_names: Sequence[FieldReference]
     ) -> list[str]:
         """Resolve model field names to database column names.
 
@@ -765,13 +794,14 @@ class BaseSchemaEditor(SchemaQuotingMixin):
         Falls back to the original name if the field is not found in the model's fields_map.
         """
         resolved = []
-        for field_name in field_names:
-            field_object = model._meta.fields_map.get(field_name)
+        for value in field_names:
+            name = field_name(value, model, local=True)
+            field_object = model._meta.fields_map.get(name)
             if field_object is not None:
-                resolved.append(field_object.source_field or field_name)
+                resolved.append(field_object.source_field or name)
             else:
                 # Field not in fields_map -- may already be a DB column name
-                resolved.append(field_name)
+                resolved.append(name)
         return resolved
 
     async def _get_unique_constraint_names_from_db(
@@ -856,7 +886,7 @@ class BaseSchemaEditor(SchemaQuotingMixin):
         if isinstance(constraint, CheckConstraint):
             constraint_sql = self.CHECK_CONSTRAINT_CREATE_TEMPLATE.format(
                 name=constraint.name,
-                check=constraint.check,
+                check=constraint.get_sql(model, self.client.query_class.SQL_CONTEXT),
             )
             await self._run_sql(
                 self.ADD_CONSTRAINT_TEMPLATE.format(
@@ -865,11 +895,9 @@ class BaseSchemaEditor(SchemaQuotingMixin):
                 )
             )
             return
-        if isinstance(constraint, UniqueConstraint) and constraint.condition:
-            raise NotImplementedError(
-                f"Partial unique indexes (condition) are not supported on {self.DIALECT}. "
-                "Use PostgreSQL for conditional unique constraints."
-            )
+        if constraint.condition is not None:
+            await self._run_sql(self._get_partial_unique_sql(model, constraint))
+            return
         resolved_fields = self._resolve_fields_to_columns(model, constraint.fields)
         constraint_name = self._constraint_name_for_model(
             model, UniqueConstraint(fields=tuple(resolved_fields), name=constraint.name)

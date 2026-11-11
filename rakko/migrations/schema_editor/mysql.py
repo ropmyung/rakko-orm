@@ -332,6 +332,7 @@ class MySQLSchemaEditor(MySQLQuotingMixin, BaseSchemaEditor):  # type: ignore[ov
             await self._run_sql(self._build_modify_column_sql(model, new_field, qualified_table))
             # Patch old_field copy so base skips changes already handled by MODIFY
             old_field = copy(old_field)
+            old_field.SQL_TYPE = new_sql_type
             old_field.null = new_field.null
             old_field.db_default = new_field.db_default
             old_field.description = new_field.description
@@ -359,7 +360,7 @@ class MySQLSchemaEditor(MySQLQuotingMixin, BaseSchemaEditor):  # type: ignore[ov
             table = self._qualify_table_name(model._meta.db_table, model._meta.schema)
             constraint_sql = self.CHECK_CONSTRAINT_CREATE_TEMPLATE.format(
                 name=constraint.name,
-                check=constraint.check,
+                check=constraint.get_sql(model, self.client.query_class.SQL_CONTEXT),
             )
             await self._run_sql(
                 self.ADD_CONSTRAINT_TEMPLATE.format(table=table, constraint=constraint_sql)

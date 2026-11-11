@@ -19,7 +19,7 @@ Next work
 * Design explicit JOIN targets and conditions, including ambiguous paths.
 * Extend typed SQL expression assignments in updates.
 * Expand live MySQL and other backend integration coverage.
-* Adapt and validate inherited migration/application integration layers.
+* Extend migration coverage to additional backends and application integrations.
 * Continue turning behavior into executable examples and focused tests.
 
 These are development directions rather than released feature promises.

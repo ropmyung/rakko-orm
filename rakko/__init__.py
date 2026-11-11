@@ -591,6 +591,8 @@ def run_async(coro: Coroutine, *, verbose: bool = False) -> None:
         portal.call(main)
 
 
+Rakko = Tortoise
+
 __version__ = "1.0.0a0"
 
 __all__ = [
@@ -606,6 +608,7 @@ __all__ = [
     "ManyToManyFieldInstance",
     "OneToOneFieldInstance",
     "Tortoise",
+    "Rakko",
     "BaseDBAsyncClient",
     "TortoiseConfig",
     "__version__",

@@ -12,8 +12,8 @@ from rakko.migrations.operations import (
     CreateSchema,
     DeleteModel,
     DropSchema,
+    RakkoOperation,
     RenameModel,
-    TortoiseOperation,
 )
 from rakko.migrations.schema_generator.state import ModelState, State
 from rakko.migrations.schema_generator.state_diff import StateModelDiff, _model_signature
@@ -121,13 +121,13 @@ class OperationGenerator:
                 schemas.add(schema)
         return schemas
 
-    def generate(self, app_labels: Sequence[str] | None = None) -> list[TortoiseOperation]:
+    def generate(self, app_labels: Sequence[str] | None = None) -> list[RakkoOperation]:
         old_keys = self._filter_keys(self.old_state.models.keys(), app_labels)
         new_keys = self._filter_keys(self.new_state.models.keys(), app_labels)
         renamed_models = self._match_renamed_models(old_keys, new_keys)
         renamed_old_keys = set(renamed_models.values())
 
-        operations: list[TortoiseOperation] = []
+        operations: list[RakkoOperation] = []
 
         # Detect new schemas that need creation (before any CreateModel)
         old_schemas = self._collect_schemas(self.old_state)

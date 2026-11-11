@@ -146,11 +146,9 @@ class SqliteSchemaEditor(SqliteQuotingMixin, BaseSchemaEditor):
         if isinstance(constraint, CheckConstraint):
             await self._remake_table(model)
             return
-        if hasattr(constraint, "condition") and constraint.condition:
-            raise NotImplementedError(
-                f"Partial unique indexes (condition) are not supported on {self.DIALECT}. "
-                "Use PostgreSQL for conditional unique constraints."
-            )
+        if constraint.condition is not None:
+            await super().add_constraint(model, constraint)
+            return
         resolved_fields = self._resolve_fields_to_columns(model, constraint.fields)
         resolved_constraint = UniqueConstraint(fields=tuple(resolved_fields), name=constraint.name)
         constraint_name = self._constraint_name_for_model(model, resolved_constraint)
@@ -384,16 +382,10 @@ class SqliteSchemaEditor(SqliteQuotingMixin, BaseSchemaEditor):
 
             field_definitions.append(field_def)
 
-        # Include CHECK constraints from model._meta.constraints in the CREATE TABLE
-        from rakko.migrations.constraints import CheckConstraint as _CheckConstraint
-
-        for constraint in getattr(model._meta, "constraints", None) or ():
-            if isinstance(constraint, _CheckConstraint):
-                field_definitions.append(
-                    self.CHECK_CONSTRAINT_CREATE_TEMPLATE.format(
-                        name=constraint.name, check=constraint.check
-                    )
-                )
+        field_definitions.extend(self._get_inline_constraints(model))
+        for fields in model._meta.unique_together:
+            columns = self._resolve_fields_to_columns(model, fields)
+            field_definitions.append(self._get_unique_constraint_sql(model, columns))
 
         qualified_new = self._qualify_table_name(new_table_name, model._meta.schema)
         qualified_old = self._qualify_table_name(db_table, model._meta.schema)
@@ -410,6 +402,10 @@ class SqliteSchemaEditor(SqliteQuotingMixin, BaseSchemaEditor):
 
         await self._run_sql(f"DROP TABLE {qualified_old}")
         await self._run_sql(f"ALTER TABLE {qualified_new} RENAME TO {qualified_old}")
+        indexed_fields = [name for name, field in fields_by_db_column.items() if field.index and not field.pk]
+        for statement in self._get_model_index_sqls(model, indexed_fields):
+            await self._run_sql(statement)
+
 
     @staticmethod
     def _default_to_sql_literal(value) -> str:

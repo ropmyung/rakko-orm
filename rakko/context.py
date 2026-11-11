@@ -569,3 +569,6 @@ __all__ = [
     "set_global_context",
     "tortoise_test_context",
 ]
+
+
+RakkoContext = TortoiseContext

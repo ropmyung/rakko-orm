@@ -31,7 +31,8 @@ Current status
 Tests exercise SQLite CRUD, relations, projections, transactions, partial
 updates, concurrent upserts, runnable examples and Pyright contracts. MySQL
 and PostgreSQL SQL generation are also covered. This is a development project;
-migration/integration adaptation and an explicit JOIN builder are further work.
+further integration work and an explicit JOIN builder are planned. Migration CLI
+tests also exercise live MySQL/PostgreSQL apply and rollback cycles.
 See :doc:`CHANGELOG` and :doc:`roadmap`.
 
 .. toctree::

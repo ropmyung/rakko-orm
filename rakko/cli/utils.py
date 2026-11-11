@@ -14,7 +14,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from rakko.config import TortoiseConfig
+from rakko.config import RakkoConfig
 from rakko.exceptions import ConfigurationError
 
 
@@ -26,32 +26,32 @@ class CLIUsageError(CLIError):
     pass
 
 
-def tortoise_orm_config(file: str = "pyproject.toml") -> str:
+def rakko_orm_config(file: str = "pyproject.toml") -> str:
     """
-    Get tortoise orm config from env or pyproject.toml.
+    Get rakko orm config from env or pyproject.toml.
 
-    :param file: toml file that contains tool.tortoise settings
-    :return: module path and var name that stores the tortoise config
+    :param file: toml file that contains tool.rakko settings
+    :return: module path and var name that stores the rakko config
     """
-    if not (config := os.getenv("TORTOISE_ORM", "")) and (p := Path(file)).exists():
+    if not (config := os.getenv("RAKKO_ORM", "")) and (p := Path(file)).exists():
         doc = tomllib.loads(p.read_text("utf-8"))
-        config = doc.get("tool", {}).get("tortoise", {}).get("tortoise_orm", "")
+        config = doc.get("tool", {}).get("rakko", {}).get("rakko_orm", "")
     return config
 
 
-def get_tortoise_config(config: str) -> TortoiseConfig:
+def get_rakko_config(config: str) -> RakkoConfig:
     """
-    Get tortoise config from module path with validation.
+    Get rakko config from module path with validation.
 
-    :param config: module path + var name, e.g. "settings.TORTOISE_ORM"
+    :param config: module path + var name, e.g. "settings.RAKKO_ORM"
     :raises CLIUsageError: If config path is invalid (missing variable name)
     :raises CLIError: If module can't be imported, variable doesn't exist, or config is invalid
-    :return: TortoiseConfig instance (converts dict configs automatically)
+    :return: RakkoConfig instance (converts dict configs automatically)
     """
     if not config or not config.strip():
         raise CLIUsageError(
             "Config path cannot be empty.\n"
-            "Expected format: module.VARIABLE (e.g., 'config.TORTOISE_ORM')\n"
+            "Expected format: module.VARIABLE (e.g., 'config.RAKKO_ORM')\n"
             "Or use --config-file to load from a file."
         )
 
@@ -59,13 +59,13 @@ def get_tortoise_config(config: str) -> TortoiseConfig:
     if len(splits) < 2:
         raise CLIUsageError(
             f"Invalid config path format: '{config}'\n"
-            f"Expected format: module.VARIABLE (e.g., 'config.TORTOISE_ORM')\n"
+            f"Expected format: module.VARIABLE (e.g., 'config.RAKKO_ORM')\n"
             f"Got: '{config}' which has no variable name after the module.\n"
             f"Alternative: use --config-file to load from a JSON/YAML file."
         )
 
     config_path = ".".join(splits[:-1])
-    tortoise_config = splits[-1]
+    rakko_config = splits[-1]
 
     if not config_path or not config_path.strip():
         raise CLIUsageError(
@@ -88,7 +88,7 @@ def get_tortoise_config(config: str) -> TortoiseConfig:
             f"Error importing module '{config_path}': {type(exc).__name__}: {exc}"
         ) from None
 
-    config_value = getattr(config_module, tortoise_config, None)
+    config_value = getattr(config_module, rakko_config, None)
     if config_value is None:
         available_vars = [
             name for name in dir(config_module) if not name.startswith("_") and name.isupper()
@@ -98,35 +98,35 @@ def get_tortoise_config(config: str) -> TortoiseConfig:
             hint = f"\nAvailable config-like variables in {config_path}: {', '.join(available_vars[:5])}"
 
         raise CLIError(
-            f"Variable '{tortoise_config}' not found in module '{config_path}'\n"
+            f"Variable '{rakko_config}' not found in module '{config_path}'\n"
             f"Checked: {config_module.__file__}{hint}\n"
-            f"Make sure '{tortoise_config}' is defined and not None."
+            f"Make sure '{rakko_config}' is defined and not None."
         )
 
-    if isinstance(config_value, TortoiseConfig):
+    if isinstance(config_value, RakkoConfig):
         return config_value
 
     if not isinstance(config_value, dict):
         raise CLIError(
-            f"Config variable '{config}' must be a dict or TortoiseConfig instance, got {type(config_value).__name__}\n"
+            f"Config variable '{config}' must be a dict or RakkoConfig instance, got {type(config_value).__name__}\n"
             f"Expected structure (as dict): {{\n"
             f"    'connections': {{'default': 'sqlite://:memory:'}},\n"
             f"    'apps': {{'models': {{'models': ['app.models'], 'default_connection': 'default'}}}}\n"
             f"}}\n"
-            f"Or import and use: from tortoise.config import TortoiseConfig, DBUrlConfig, AppConfig"
+            f"Or import and use: from rakko.config import RakkoConfig, DBUrlConfig, AppConfig"
         )
 
     try:
-        return TortoiseConfig.from_dict(config_value)
+        return RakkoConfig.from_dict(config_value)
     except ConfigurationError as exc:
         raise CLIError(
-            f"Invalid Tortoise ORM configuration in '{config}':\n"
+            f"Invalid Rakko ORM configuration in '{config}':\n"
             f"  {exc}\n\n"
             f"Expected structure:\n"
             f"  - 'connections': dict with at least one database connection\n"
             f"  - 'apps': dict with at least one app configuration\n\n"
             f"Example:\n"
-            f"  TORTOISE_ORM = {{\n"
+            f"  RAKKO_ORM = {{\n"
             f"      'connections': {{'default': 'sqlite://:memory:'}},\n"
             f"      'apps': {{\n"
             f"          'models': {{\n"

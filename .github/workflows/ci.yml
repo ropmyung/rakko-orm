@@ -10,6 +10,8 @@ on:
 permissions:
   contents: read
 jobs:
+  database-migrations:
+    uses: ./.github/workflows/migrations.yml
   test:
     strategy:
       fail-fast: false

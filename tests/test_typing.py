@@ -55,14 +55,21 @@ def test_invalid_query_arguments_are_rejected(tmp_path: Path) -> None:
         "Member.update_or_create(Member.name == 'Alice', id=1)",
         "Member.get_or_create(Member.name == 'Alice', note=1)",
         "Member.update_or_create(Member.name == 'Alice', guild=1)",
+        "CheckConstraint(check='age >= 0', name='positive')",
+        "CheckConstraint(check=True, name='positive')",
+        "UniqueConstraint(fields=(Member.age,), condition='age > 0')",
+        "CheckConstraint(check=lambda: Member.age == 'old', name='positive')",
+        "Index(fields=(1,))",
     ]
     path = tmp_path / "invalid_queries.py"
-    path.write_text(
-        "from typing import cast\nfrom rakko import Field, fields\nfrom tests.testmodels import Guild, Member\n"
-        + "\n".join(invalid_calls)
-        + "\n",
-        encoding="utf-8",
-    )
+    imports = [
+        "from typing import cast",
+        "from rakko import Field, fields",
+        "from tests.testmodels import Guild, Member",
+        "from rakko.migrations.constraints import CheckConstraint, UniqueConstraint",
+        "from rakko.indexes import Index",
+    ]
+    path.write_text("\n".join([*imports, *invalid_calls]) + "\n", encoding="utf-8")
     result = run_pyright(path)
     assert result.returncode == 1, result.stdout + result.stderr
     diagnostics = json.loads(result.stdout)["generalDiagnostics"]
@@ -71,4 +78,4 @@ def test_invalid_query_arguments_are_rejected(tmp_path: Path) -> None:
         for diagnostic in diagnostics
         if diagnostic["severity"] == "error"
     }
-    assert error_lines == set(range(3, 3 + len(invalid_calls))), result.stdout
+    assert error_lines == set(range(len(imports), len(imports) + len(invalid_calls))), result.stdout

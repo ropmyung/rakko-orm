@@ -2,9 +2,9 @@
 # Derived from Tortoise ORM; maintained and modified for Rakko ORM.
 # SPDX-License-Identifier: Apache-2.0
 
-class TortoiseMigrationError(Exception):
+class RakkoMigrationError(Exception):
     """Base migration error."""
 
 
-class IncompatibleStateError(TortoiseMigrationError):
+class IncompatibleStateError(RakkoMigrationError):
     """Raised when a migration operation can't be executed on a given State."""

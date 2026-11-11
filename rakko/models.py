@@ -1728,7 +1728,8 @@ class Model(metaclass=ModelMeta):
 
         for fields_tuple in _together:
             if isinstance(fields_tuple, Index):
-                fields_tuple = fields_tuple.fields
+                fields_tuple.resolve_expressions(cls)
+                fields_tuple = fields_tuple.field_names
             for field_name in fields_tuple:
                 field = cls._meta.fields_map.get(field_name)
 

@@ -158,6 +158,16 @@ class IntField[T: (int, int | None)](Field[T], int):
 
     def deconstruct(self) -> tuple[str, list[Any], dict[str, Any]]:
         path, args, kwargs = super().deconstruct()
+        if self.generated:
+            auto_fields = {
+                IntField: "AutoField",
+                BigIntField: "BigAutoField",
+                SmallIntField: "SmallAutoField",
+                TinyIntField: "TinyAutoField",
+            }
+            if type(self) in auto_fields:
+                path = f'{__name__}.{auto_fields[type(self)]}'
+                kwargs["primary_key"] = self.pk
         kwargs.pop("generated", None)
         if self.unsigned:
             kwargs["unsigned"] = True
