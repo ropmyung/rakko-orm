@@ -1,0 +1,89 @@
+/* Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
+ * Derived from Tortoise ORM; maintained and modified for Rakko ORM.
+ * SPDX-License-Identifier: Apache-2.0 */
+
+/* Local fonts keep Rakko documentation builds offline. */
+:root {
+    --md-text-font-family: "Segoe UI", "Noto Sans", system-ui, sans-serif;
+    --md-code-font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+    --rakko-radius: 18px;
+}
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: #126b9f;
+    --md-primary-fg-color--light: #e5f3fb;
+    --md-primary-fg-color--dark: #103454;
+    --md-accent-fg-color: #0879b0;
+    --md-typeset-a-color: #075f96;
+    --md-default-bg-color: #fbfdff;
+    --rakko-surface: #edf7fd;
+    --rakko-border: #cce5f3;
+    --rakko-muted: #486579;
+    --rakko-shadow: 0 12px 38px #1034540d;
+}
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #123c59;
+    --md-primary-fg-color--light: #214e6c;
+    --md-primary-fg-color--dark: #081927;
+    --md-accent-fg-color: #65ccf4;
+    --md-typeset-a-color: #79d1f4;
+    --md-default-bg-color: #0e1c2a;
+    --md-default-fg-color: #e0edf5;
+    --md-default-fg-color--light: #a8c2d3;
+    --md-default-fg-color--lighter: #55788e;
+    --md-code-bg-color: #142a3b;
+    --rakko-surface: #142e42;
+    --rakko-border: #28516c;
+    --rakko-muted: #afcada;
+    --rakko-shadow: 0 12px 38px #00000024;
+}
+.md-header { background: var(--md-primary-fg-color); }
+.md-header__button.md-logo img { width: 2rem; height: 2rem; object-fit: contain; }
+.md-header__title { font-weight: 700; letter-spacing: -0.025em; }
+.md-typeset h1, .md-typeset h2, .md-typeset h3 { letter-spacing: -0.025em; }
+.md-typeset h1 { font-weight: 750; }
+.md-typeset a:hover { text-decoration: underline; text-underline-offset: 0.16em; }
+.rakko-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(150px, 0.8fr);
+    align-items: center;
+    gap: 1.6rem;
+    margin: 1rem 0 1.8rem;
+    padding: clamp(1.2rem, 4vw, 2.5rem);
+    border: 1px solid var(--rakko-border);
+    border-radius: var(--rakko-radius);
+    background: var(--rakko-surface);
+    box-shadow: var(--rakko-shadow);
+}
+.rakko-eyebrow {
+    margin: 0 0 0.7rem;
+    color: var(--md-typeset-a-color);
+    font-size: 0.62rem;
+    font-weight: 750;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.rakko-headline {
+    margin: 0 0 0.8rem;
+    font-size: clamp(1.8rem, 3.6vw, 2.7rem);
+    font-weight: 750;
+    line-height: 1.08;
+    letter-spacing: -0.055em;
+}
+.rakko-intro { color: var(--rakko-muted); line-height: 1.6; }
+.rakko-hero img { width: 100%; max-width: 250px; justify-self: center; }
+.rakko-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.1rem; }
+.rakko-actions a {
+    padding: 0.55rem 0.85rem;
+    border: 1px solid var(--rakko-border);
+    border-radius: 9px;
+    color: var(--md-typeset-a-color);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+.rakko-actions a:first-child { border-color: var(--md-primary-fg-color); background: var(--md-primary-fg-color); color: #ffffff; }
+.rakko-actions a:focus-visible { outline: 3px solid var(--md-accent-fg-color); outline-offset: 3px; }
+.md-typeset .highlight, .md-typeset pre { border-radius: 9px; }
+@media (max-width: 600px) {
+    .rakko-hero { grid-template-columns: 1fr; gap: 0.9rem; }
+    .rakko-hero img { grid-row: 1; width: 135px; }
+}

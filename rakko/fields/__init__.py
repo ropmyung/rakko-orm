@@ -1,0 +1,111 @@
+# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
+# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
+# SPDX-License-Identifier: Apache-2.0
+
+from rakko.fields.base import (
+    CASCADE,
+    NO_ACTION,
+    RESTRICT,
+    SET_DEFAULT,
+    SET_NULL,
+    Field,
+    OnDelete,
+)
+from rakko.fields.data import (
+    AutoField,
+    BigAutoField,
+    BigIntField,
+    BinaryField,
+    BooleanField,
+    CharEnumField,
+    CharField,
+    DateField,
+    DatetimeField,
+    DecimalField,
+    FloatField,
+    IntEnumField,
+    IntField,
+    JSONField,
+    SmallAutoField,
+    SmallIntField,
+    TextField,
+    TimeDeltaField,
+    TimeField,
+    TinyAutoField,
+    TinyIntField,
+    UUIDField,
+)
+from rakko.fields.db_defaults import Now, RandomHex, SqlDefault
+from rakko.fields.relational import (
+    BackwardFKRelation,
+    BackwardOneToOneRelation,
+    ForeignKeyField,
+    ForeignKeyNullableRelation,
+    ForeignKeyRelation,
+    ManyToManyField,
+    ManyToManyRelation,
+    OneToOneField,
+    OneToOneNullableRelation,
+    OneToOneRelation,
+    ReverseRelation,
+)
+
+__all__ = [
+    "AutoField",
+    "BigAutoField",
+    "SmallAutoField",
+    "TinyAutoField",
+    "CASCADE",
+    "RESTRICT",
+    "SET_DEFAULT",
+    "SET_NULL",
+    "NO_ACTION",
+    "OnDelete",
+    "Field",
+    "Now",
+    "RandomHex",
+    "SqlDefault",
+    "BigIntField",
+    "BinaryField",
+    "BooleanField",
+    "CharEnumField",
+    "CharField",
+    "DateField",
+    "DatetimeField",
+    "TimeField",
+    "TinyIntField",
+    "DecimalField",
+    "FloatField",
+    "IntEnumField",
+    "IntField",
+    "JSONField",
+    "SmallIntField",
+    "TextField",
+    "TimeDeltaField",
+    "UUIDField",
+    "BackwardFKRelation",
+    "BackwardOneToOneRelation",
+    "ForeignKeyField",
+    "ForeignKeyNullableRelation",
+    "ForeignKeyRelation",
+    "ManyToManyField",
+    "ManyToManyRelation",
+    "OneToOneField",
+    "OneToOneNullableRelation",
+    "OneToOneRelation",
+    "ReverseRelation",
+    "IntegerField",
+    "SmallIntegerField",
+    "DurationField",
+    "BigIntegerField",
+    "DateTimeField",
+    "ForeignKey",
+]
+
+# Django field name compatibility
+from rakko.fields.data import BigIntField as BigIntegerField
+from rakko.fields.data import DatetimeField as DateTimeField
+from rakko.fields.data import IntField as IntegerField
+from rakko.fields.data import SmallIntField as SmallIntegerField
+from rakko.fields.data import TimeDeltaField as DurationField
+from rakko.fields.relational import ForeignKeyField as ForeignKey

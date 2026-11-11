@@ -1,0 +1,22 @@
+Rakko ORM
+
+Copyright 2018 Andrey Bondar (original Tortoise ORM).
+Copyright 2026 ropmyung (Rakko ORM modifications and additions).
+
+Rakko ORM is an independently maintained project derived from Tortoise ORM.
+It includes code originally developed by Tortoise ORM contributors:
+https://github.com/tortoise/tortoise-orm
+
+Original project authors include Andrey Bondar, Nickolas Grigoriadis and
+long2ice. The retained upstream contributor acknowledgements appear in
+CONTRIBUTORS.rst. Existing source notices and the Apache License 2.0 text
+in LICENSE.txt are retained.
+
+Rakko-specific changes include typed model and field declarations,
+model-bound PyPika expressions, query constructor parameter inference,
+field-reference query APIs, explicit automatic integer fields, metadata
+declarations, documentation and branding. See CHANGELOG.rst.
+
+This notice was created for Rakko ORM; it is not an upstream NOTICE file.
+Rakko ORM is not an official Tortoise ORM release and does not imply upstream
+endorsement. The Apache License does not grant rights to upstream trademarks.

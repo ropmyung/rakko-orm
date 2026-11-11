@@ -1,0 +1,72 @@
+# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
+# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
+# SPDX-License-Identifier: Apache-2.0
+
+ci:
+  autoupdate_schedule: monthly
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-toml
+      - id: check-yaml
+        args: [--unsafe]
+      - id: end-of-file-fixer
+        files: rakko/
+      - id: trailing-whitespace
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.9
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix, --show-fixes, rakko/, examples/, tests/, conftest.py]
+        pass_filenames: false
+      - id: ruff-format
+        args: [rakko/, examples/, tests/, conftest.py]
+        pass_filenames: false
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.2
+    hooks:
+      - id: codespell  # See pyproject.toml for args
+        additional_dependencies:
+          - tomli
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: Check type hints by mypy
+        entry: uv run --frozen mypy
+        language: system
+        args: [rakko/, examples/, tests/, conftest.py]
+        pass_filenames: false
+        groups: [check]
+        stages: [manual]
+
+      - id: bandit
+        name: Check security by bandit
+        entry: uv run --frozen bandit
+        language: system
+        args: [-c, pyproject.toml, -r, rakko/, examples/, tests/, conftest.py]
+        pass_filenames: false
+        groups: [check]
+        stages: [manual]
+
+      - id: build
+        name: Build sdist by uv
+        entry: uv build --out-dir dist/releases/1.0.0a0
+        language: system
+        pass_filenames: false
+        groups: [check]
+        stages: [manual]
+
+      - id: twine
+        name: Check sdist by twine
+        entry: uv run --no-sync twine check --strict dist/releases/1.0.0a0/*.whl dist/releases/1.0.0a0/*.tar.gz
+        language: system
+        pass_filenames: false
+        require_serial: true
+        priority: 20
+        groups: [check]
+        stages: [manual]

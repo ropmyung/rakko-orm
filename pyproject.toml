@@ -1,0 +1,243 @@
+# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
+# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
+# SPDX-License-Identifier: Apache-2.0
+
+[project]
+name = "rakko-orm"
+description = "An independent async Python ORM with typed fields and PyPika-powered queries"
+authors = [{ name = "ropmyung" }]
+license = "Apache-2.0"
+license-files = ["LICENSE.txt", "NOTICE.txt", "CONTRIBUTORS.rst"]
+readme = "README.pypi.md"
+keywords = ["sql", "mysql", "postgres", "psql", "sqlite", "aiosqlite", "asyncpg", "relational", "database", "rdbms", "orm", "object mapper", "async", "asyncio", "aio", "psycopg"]
+dynamic = ["version"]
+requires-python = ">=3.12"
+dependencies = [
+    "pypika-tortoise (>=0.6.5,<1.0.0)",
+    "iso8601 (>=2.1.0,<3.0.0); python_version < '4.0'",
+    "aiosqlite (>=0.16.0,<1.0.0)",
+    "anyio",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: PL/SQL",
+    "Framework :: AsyncIO",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Database",
+    "Typing :: Typed",
+    "Operating System :: POSIX",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+]
+
+[project.optional-dependencies]
+ipython = [
+    "ipython",
+    "nest-asyncio>=1.6.0",
+]
+ptpython = [
+    "ptpython>=3.0.0",
+]
+accel = [
+    "ciso8601; sys_platform != 'win32' and implementation_name == 'cpython'",
+    "uvloop; sys_platform != 'win32' and implementation_name == 'cpython'",
+    "orjson",
+]
+asyncpg = ["asyncpg"]
+aiomysql = ["aiomysql"]
+asyncmy = ["asyncmy (>=0.2.12,<1.0.0)"]
+psycopg = ["psycopg[pool,binary] (>=3.0.12,<4.0.0)"]
+asyncodbc = ["asyncodbc (>=0.1.1,<1.0.0); python_version < '4.0'"]
+
+[project.scripts]
+rakko = "rakko.cli:main"
+
+[dependency-groups]
+dev = [
+    # Linter tools
+    "mypy",
+    "ruff",
+    "pylint",
+    "bandit",
+    "codespell",
+    # Pypi
+    "twine",
+    # mypy
+    "types-PyYAML",
+    "types-pytz",
+    "types-PyMySQL",
+]
+contrib = [
+    # Sample integration - Quart
+    "quart",
+    # Sample integration - Sanic
+    "sanic",
+    "sanic-testing",
+    # Sample integration - Starlette
+    "starlette >=1.0,<2.0",
+    # Pydantic support
+    "pydantic >=2.0,!=2.7.0",
+    # FastAPI support
+    "fastapi >=0.115.0",
+    "asgi_lifespan",
+    "httpx",
+    # Aiohttp support
+    "aiohttp",
+    # BlackSheep support
+    "blacksheep>=2.0.8",
+    "pytest-asyncio>=0.24.0",
+]
+test = [
+    # Test tools
+    "pytest",
+    "pytest-xdist",
+    "pytest-cov",
+    "pytest-codspeed",
+    "pytest-asyncio",
+    "cryptography>=46.0.3",
+    "aiomysql>=0.3.2",
+    "pytz>=2025.2",
+    "pyright>=1.1.414",
+]
+docs = [
+    # Documentation tools
+    "sphinx-immaterial",
+    "sphinx-copybutton",
+    "Pygments",
+    "docutils",
+]
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm]
+version = { source = "file", path = "rakko/__init__.py" }
+
+[tool.pdm.build]
+excludes = ["./**/.git", "./**/.*_cache", "./**/__pycache__", "docs/_build"]
+includes = ["rakko/"]
+source-includes = [
+    "CHANGELOG.rst", "LICENSE.txt", "NOTICE.txt", "CONTRIBUTORS.rst",
+    "README.md", "README.pypi.md", "RELEASING.md", "LICENSE_REVIEW.md",
+    "ASSETS.md", "docs/", "examples/", "tests/", "conftest.py", "uv.lock",
+]
+
+[tool.mypy]
+pretty = true
+exclude = ["docs"]
+ignore_missing_imports = true
+check_untyped_defs = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_return_any = false
+warn_unused_configs = true
+warn_unreachable = true
+allow_redefinition = true
+strict_equality = true
+show_error_context = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+check_untyped_defs = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+warn_unreachable = false
+
+[[tool.mypy.overrides]]
+module = "examples.*"
+check_untyped_defs = false
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = "examples.fastapi.*"
+check_untyped_defs = true
+disallow_untyped_calls = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = "rakko.contrib.test.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[[tool.mypy.overrides]]
+module = "rakko.contrib.sanic.*"
+disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = ["conftest", "rakko.backends.base.client"]
+disallow_untyped_defs = false
+
+[tool.flake8]
+ignore = "E203,E501,W503,DAR101,DAR201,DAR402"
+max-line-length = 100
+per-file-ignores = [
+    "rakko/__init__.py:F401",
+    "rakko/fields/__init__.py:F401",
+    "rakko/backends/base/client.py:DAR401,DAR202",
+    "rakko/contrib/test/__init__.py:DAR401",
+]
+docstring_style = "sphinx"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+markers = [
+    "benchmark: Performance regression tests (excluded from coverage runs)",
+]
+filterwarnings = [
+    'ignore:`pk` is deprecated:DeprecationWarning',
+    'ignore:`index` is deprecated:DeprecationWarning',
+    'ignore:Do not add pk field to `update_fields`!:RuntimeWarning',
+]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = ["docs/type_globals.py"]
+[tool.ruff.lint]
+ignore = ["E501"]
+extend-select = [
+    "I", # https://docs.astral.sh/ruff/rules/#isort-i
+    "FA", # https://docs.astral.sh/ruff/rules/#flake8-future-annotations-fa
+    "UP", # https://docs.astral.sh/ruff/rules/#pyupgrade-up
+    "RUF100", # https://docs.astral.sh/ruff/rules/#ruff-specific-rules-ruf
+]
+
+[tool.ruff.lint.isort]
+extra-standard-library = ["tomllib"]
+
+[tool.bandit]
+exclude_dirs = [
+    "tests",
+    "examples/*/_tests.py",
+    "examples/pytest",
+    "conftest.py",
+    "rakko/migrations/schema_editor/mssql.py",
+    "examples/postgres_full_text_search.py",
+    "examples/postgres.py",
+]
+
+[tool.codespell]
+ignore-words-list = "notin,NotIn,brin,BRIN,astroid"
