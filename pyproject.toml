@@ -127,8 +127,11 @@ includes = ["rakko/"]
 source-includes = [
     "CHANGELOG.rst", "LICENSE.txt", "NOTICE.txt", "CONTRIBUTORS.rst",
     "README.md", "README.pypi.md", "RELEASING.md", "LICENSE_REVIEW.md",
-    "ASSETS.md", "docs/", "examples/", "tests/", "conftest.py", "uv.lock",
+    "ASSETS.md", "docs/", "examples/", "tests/", "typings/", "conftest.py", "uv.lock",
 ]
+
+[tool.pyright]
+stubPath = "typings"
 
 [tool.mypy]
 pretty = true

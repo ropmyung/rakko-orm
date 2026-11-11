@@ -27,6 +27,11 @@ changes. Keep examples executable. Distinguish fixes, API changes and planned wo
 ``examples/`` runnable scripts, and ``docs/`` Sphinx sources. Preserve source
 notices and upstream credits. See :doc:`CODE_OF_CONDUCT`.
 
+``typings/`` supplies partial root export declarations for ``pypika_tortoise``.
+Keep its ``py.typed`` marker set to ``partial`` so other upstream modules retain
+their real types. Do not edit installed dependencies to fix local type errors;
+CI installs the unmodified PyPI packages.
+
 .. toctree::
    :hidden:
 
