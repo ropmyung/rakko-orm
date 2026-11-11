@@ -7,14 +7,14 @@
 Rakko ORM changelog
 ===================
 
-1.0.0-alpha — first Rakko release
----------------------------------
-
-Maintained by ropmyung. The Python distribution version is ``1.0.0a0``.
-
 This file summarizes Rakko-specific changes. The project began as a fork of
 `Tortoise ORM <https://github.com/tortoise/tortoise-orm>`_; upstream releases
 are not presented as Rakko release history.
+
+1.0.0-alpha.1 — migration fixes
+-------------------------------
+
+Maintained by ropmyung. The Python distribution version is ``1.0.0a1``.
 
 Migration fixes
 ~~~~~~~~~~~~~~~
@@ -28,6 +28,13 @@ Migration fixes
 * Preserve SQLite foreign-key data, constraints and indexes during table rebuilds.
 * Commit transactional schema/history changes together and keep dry runs read-only.
 * Add CLI regressions and live MySQL/PostgreSQL migration checks to CI and releases.
+
+* Verify 206 tests, including live MySQL/PostgreSQL migration cycles.
+
+1.0.0-alpha — first Rakko release
+---------------------------------
+
+The Python distribution version is ``1.0.0a0``.
 
 Model and query API
 ~~~~~~~~~~~~~~~~~~~
@@ -63,5 +70,5 @@ Project and validation
 Next work
 ~~~~~~~~~
 
-An explicit JOIN builder, broader live-database validation, and adaptation of
-remaining framework integrations and broader backend validation remain follow-up work.
+An explicit JOIN builder, remaining framework integrations and broader backend
+validation remain follow-up work.

@@ -5,7 +5,7 @@
 checkfiles = rakko/ examples/ tests/ conftest.py
 py_warn = PYTHONDEVMODE=1
 pytest_opts = -n auto --cov=rakko --cov-append --cov-branch --tb=native -q -m "not benchmark"
-release_dir = dist/releases/1.0.0a0
+release_dir = dist/releases/1.0.0a1
 
 TORTOISE_MYSQL_PASS ?= 123456
 TORTOISE_POSTGRES_PASS ?= 123456

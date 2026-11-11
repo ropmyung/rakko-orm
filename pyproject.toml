@@ -59,6 +59,10 @@ asyncodbc = ["asyncodbc (>=0.1.1,<1.0.0); python_version < '4.0'"]
 [project.scripts]
 rakko = "rakko.cli:main"
 
+[project.urls]
+Repository = "https://github.com/ropmyung/rakko-orm"
+Issues = "https://github.com/ropmyung/rakko-orm/issues"
+
 [dependency-groups]
 dev = [
     # Linter tools

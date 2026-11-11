@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0 -->
 
 # Distribution license review
 
-Reviewed for Rakko ORM 1.0.0-alpha (`1.0.0a0`), maintained by ropmyung.
+Reviewed for Rakko ORM 1.0.0-alpha.1 (`1.0.0a1`), maintained by ropmyung.
 
 Rakko is derived from Tortoise ORM and retains Apache-2.0. The review uses the
 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), especially

@@ -4,8 +4,8 @@ SPDX-License-Identifier: Apache-2.0 -->
 
 # Releasing Rakko ORM
 
-Release name: **1.0.0-alpha**. Package version: **1.0.0a0**. Maintainer: **ropmyung**.
-Python packaging normalizes `1.0.0-alpha` to `1.0.0a0` (implicit alpha number 0).
+Release name: **1.0.0-alpha.1**. Package version: **1.0.0a1**. Maintainer: **ropmyung**.
+Python packaging normalizes `1.0.0-alpha.1` to `1.0.0a1` (alpha number 1).
 See the [version specification](https://packaging.python.org/en/latest/specifications/version-specifiers/).
 
 ## Prepare and verify
@@ -17,8 +17,8 @@ uv sync --all-groups --extra asyncpg --extra psycopg
 uv run --no-sync pytest -q
 uv run --no-sync pyright rakko examples docs/sphinx_autodoc_typehints.py
 uv run --no-sync sphinx-build -W --keep-going -b html docs docs/_build/html
-uv build --out-dir dist/releases/1.0.0a0
-uv run --no-sync twine check --strict dist/releases/1.0.0a0/*.whl dist/releases/1.0.0a0/*.tar.gz
+uv build --out-dir dist/releases/1.0.0a1
+uv run --no-sync twine check --strict dist/releases/1.0.0a1/*.whl dist/releases/1.0.0a1/*.tar.gz
 ```
 
 The version in `rakko/__init__.py`, changelog, distribution README and release
@@ -31,12 +31,13 @@ Read `LICENSE_REVIEW.md` before distributing changes derived from upstream.
 
 `README.md` is the repository guide with local logo/documentation links.
 `README.pypi.md` is the self-contained package description used for PyPI.
-No repository, issues or documentation URL is advertised until a public home exists.
+The repository and issue links point to https://github.com/ropmyung/rakko-orm.
+A documentation site URL will be added once hosting is configured.
 
 ## Configure the public home
 
-Create the public repository and set `project.urls` to its real URLs. Keep the
-upstream credits while using Rakko's own repository and issue tracker.
+The public repository is https://github.com/ropmyung/rakko-orm. Keep the upstream
+credits while using Rakko's own repository and issue tracker.
 The package name has not been reserved by these local preparations; availability
 must be checked when creating the PyPI project.
 
@@ -45,7 +46,7 @@ for the actual repository, workflow `pypi.yml`, and environment `pypi`.
 Configure TestPyPI separately with environment `testpypi` if using it. The workflow
 uses OIDC, with no copied upstream secrets. It defaults to building artifacts
 only; explicitly select `testpypi` or `pypi` to upload. Publish from the reviewed
-release commit, using tag `v1.0.0-alpha` for this release.
+release commit, using tag `v1.0.0-alpha.1` for this release.
 
 For documentation, enable GitHub Pages with source **GitHub Actions** and run
 `gh-pages.yml`. It publishes to this repository's Pages site and contains no

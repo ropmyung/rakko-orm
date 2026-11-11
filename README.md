@@ -10,7 +10,7 @@ SPDX-License-Identifier: Apache-2.0 -->
 
 **Typed queries. Async by nature.**
 
-**1.0.0-alpha** · Python package version **1.0.0a0** · Maintained by **ropmyung**.
+**1.0.0-alpha.1** · Python package version **1.0.0a1** · Maintained by **ropmyung**.
 
 Rakko ORM is an asynchronous Python ORM built around typed model fields,
 natural Python conditions and MySQL-friendly database access.

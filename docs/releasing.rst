@@ -7,8 +7,9 @@ Release preparation
 The source distribution includes ``RELEASING.md``, ``LICENSE_REVIEW.md`` and
 ``ASSETS.md`` with release commands, licensing decisions and artwork provenance.
 
-This release is **1.0.0-alpha**, distributed as ``1.0.0a0``, and maintained by
-**ropmyung**. A public repository and documentation URL have not been assigned.
+This release is **1.0.0-alpha.1**, distributed as ``1.0.0a1``, and maintained by
+**ropmyung**. The repository is https://github.com/ropmyung/rakko-orm; a documentation
+site URL has not been assigned.
 
 Preserve the original license, existing notices and contributor credits. New
 changes to inherited files must retain a visible Rakko modification notice.

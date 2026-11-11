@@ -55,7 +55,7 @@ repos:
 
       - id: build
         name: Build sdist by uv
-        entry: uv build --out-dir dist/releases/1.0.0a0
+        entry: uv build --out-dir dist/releases/1.0.0a1
         language: system
         pass_filenames: false
         groups: [check]
@@ -63,7 +63,7 @@ repos:
 
       - id: twine
         name: Check sdist by twine
-        entry: uv run --no-sync twine check --strict dist/releases/1.0.0a0/*.whl dist/releases/1.0.0a0/*.tar.gz
+        entry: uv run --no-sync twine check --strict dist/releases/1.0.0a1/*.whl dist/releases/1.0.0a1/*.tar.gz
         language: system
         pass_filenames: false
         require_serial: true

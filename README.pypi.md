@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0 -->
 **Typed queries. Async by nature.**
 
 Rakko ORM is an independent asynchronous Python ORM maintained by **ropmyung**.
-Release **1.0.0-alpha** uses the Python package version **1.0.0a0** and requires
+Release **1.0.0-alpha.1** uses the Python package version **1.0.0a1** and requires
 Python **3.12 or newer**. Its name means sea otter (해달).
 
 Rakko began as a fork of [Tortoise ORM](https://github.com/tortoise/tortoise-orm).

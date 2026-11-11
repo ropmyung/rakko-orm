@@ -593,7 +593,7 @@ def run_async(coro: Coroutine, *, verbose: bool = False) -> None:
 
 Rakko = Tortoise
 
-__version__ = "1.0.0a0"
+__version__ = "1.0.0a1"
 
 __all__ = [
     "Criterion",
