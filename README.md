@@ -5,6 +5,8 @@
 </p>
 
 # Rakko ORM
+.. image:: https://img.shields.io/pypi/v/rakko-orm.svg?style=flat
+   :target: https://pypi.python.org/pypi/rakko-orm
 
 **Typed queries. Async by nature.**
 
