@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: adapt integration imports and model/query interfaces to the rakko package.
 
 """
 Modern testing utilities for Tortoise ORM.
@@ -35,7 +33,7 @@ from functools import partial, wraps
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast, overload
 from unittest import SkipTest, expectedFailure, skip, skipIf, skipUnless
 
-from rakko import Tortoise, run_async
+from rakko import Rakko, run_async
 from rakko.connection import get_connection
 from rakko.context import TortoiseContext, tortoise_test_context
 
@@ -84,10 +82,10 @@ async def truncate_all_models() -> None:
     Raises:
         ValueError: If Tortoise.apps is not loaded.
     """
-    if not Tortoise.apps:
+    if not Rakko.apps:
         raise ValueError("apps are not loaded")
 
-    models = list(Tortoise.apps.get_models_iterable())
+    models = list(Rakko.apps.get_models_iterable())
 
     if not models:
         return
@@ -288,8 +286,8 @@ def init_memory_sqlite(
     def wrapper[**P, R](func: Callable[P, Coroutine[Any, Any, R]], ms: list[str]):
         @wraps(func)
         async def runner(*args: P.args, **kwargs: P.kwargs) -> R:
-            await Tortoise.init(db_url=MEMORY_SQLITE, modules={"models": ms})
-            await Tortoise.generate_schemas()
+            await Rakko.init(db_url=MEMORY_SQLITE, modules={"models": ms})
+            await Rakko.generate_schemas()
             return await func(*args, **kwargs)
 
         return runner

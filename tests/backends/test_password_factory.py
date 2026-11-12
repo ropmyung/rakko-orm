@@ -1,13 +1,11 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: retarget password-factory imports and driver mocks to Rakko.
 
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from rakko import Tortoise
+from rakko import Rakko
 from rakko.backends.base.client import resolve_password
 from rakko.context import TortoiseContext
 
@@ -141,4 +139,4 @@ def test_star_password_ignores_password_callables() -> None:
     }
 
     # Must not raise: masking only applies to string passwords
-    assert "s3cret" not in Tortoise.star_password(config)
+    assert "s3cret" not in Rakko.star_password(config)

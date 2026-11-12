@@ -1,11 +1,9 @@
-<!-- Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-SPDX-License-Identifier: Apache-2.0 -->
+<!-- Modified for Rakko ORM: document the Rakko model/query API, project identity and development workflow. -->
 
 # Releasing Rakko ORM
 
-Release name: **1.0.0-alpha.1**. Package version: **1.0.0a1**. Maintainer: **ropmyung**.
-Python packaging normalizes `1.0.0-alpha.1` to `1.0.0a1` (alpha number 1).
+Release name: **1.0.0-alpha.2**. Package version: **1.0.0a2**. Maintainer: **ropmyung**.
+Python packaging normalizes `1.0.0-alpha.2` to `1.0.0a2` (alpha number 2).
 See the [version specification](https://packaging.python.org/en/latest/specifications/version-specifiers/).
 
 ## Prepare and verify
@@ -15,10 +13,10 @@ Use Python 3.12+ and uv. The commands below work in PowerShell as well as a POSI
 ```console
 uv sync --all-groups --extra asyncpg --extra psycopg
 uv run --no-sync pytest -q
-uv run --no-sync pyright rakko examples docs/sphinx_autodoc_typehints.py
+uv run --no-sync pyright rakko examples docs/sphinx_autodoc_typehints.py tests/migrations/test_writer.py
 uv run --no-sync sphinx-build -W --keep-going -b html docs docs/_build/html
-uv build --out-dir dist/releases/1.0.0a1
-uv run --no-sync twine check --strict dist/releases/1.0.0a1/*.whl dist/releases/1.0.0a1/*.tar.gz
+uv build --out-dir dist/releases/1.0.0a2
+uv run --no-sync twine check --strict dist/releases/1.0.0a2/*.whl dist/releases/1.0.0a2/*.tar.gz
 ```
 
 The version in `rakko/__init__.py`, changelog, distribution README and release
@@ -46,7 +44,7 @@ for the actual repository, workflow `pypi.yml`, and environment `pypi`.
 Configure TestPyPI separately with environment `testpypi` if using it. The workflow
 uses OIDC, with no copied upstream secrets. It defaults to building artifacts
 only; explicitly select `testpypi` or `pypi` to upload. Publish from the reviewed
-release commit, using tag `v1.0.0-alpha.1` for this release.
+release commit, using tag `v1.0.0-alpha.2` for this release.
 
 For documentation, enable GitHub Pages with source **GitHub Actions** and run
 `gh-pages.yml`. It publishes to this repository's Pages site and contains no

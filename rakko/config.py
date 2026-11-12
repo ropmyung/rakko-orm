@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: expose Rakko configuration while retaining the previous class alias.
 
 from __future__ import annotations
 

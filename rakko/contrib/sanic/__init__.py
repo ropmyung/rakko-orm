@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: adapt integration imports and model/query interfaces to the rakko package.
 
 from __future__ import annotations
 
@@ -9,7 +7,7 @@ from types import ModuleType
 
 from sanic import Sanic  # pylint: disable=E0401
 
-from rakko import Tortoise
+from rakko import Rakko
 from rakko.connection import get_connections
 from rakko.log import logger
 
@@ -86,14 +84,14 @@ def register_tortoise(
     """
 
     async def tortoise_init() -> None:
-        await Tortoise.init(
+        await Rakko.init(
             config=config,
             config_file=config_file,
             db_url=db_url,
             modules=modules,
             _enable_global_fallback=_enable_global_fallback,
         )
-        logger.info("Tortoise-ORM started, %s, %s", get_connections()._get_storage(), Tortoise.apps)  # pylint: disable=W0212
+        logger.info("Tortoise-ORM started, %s, %s", get_connections()._get_storage(), Rakko.apps)  # pylint: disable=W0212
 
     if generate_schemas:
 
@@ -101,16 +99,16 @@ def register_tortoise(
         async def init_orm_main(app):  # pylint: disable=W0612
             await tortoise_init()
             logger.info("Tortoise-ORM generating schema")
-            await Tortoise.generate_schemas()
+            await Rakko.generate_schemas()
 
     @app.before_server_start
     async def init_orm(app):
         await tortoise_init()
         if generate_schemas and getattr(app, "_test_manager", None):
             # Running by sanic-testing
-            await Tortoise.generate_schemas()
+            await Rakko.generate_schemas()
 
     @app.after_server_stop
     async def close_orm(app):  # pylint: disable=W0612
-        await Tortoise.close_connections()
+        await Rakko.close_connections()
         logger.info("Tortoise-ORM shutdown")

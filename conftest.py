@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: adapt test fixtures and assertions to Rakko imports and APIs.
 
 """
 Pytest configuration for Tortoise ORM tests.

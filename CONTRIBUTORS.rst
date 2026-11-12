@@ -1,6 +1,4 @@
-.. Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-   Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-   SPDX-License-Identifier: Apache-2.0
+.. Modified for Rakko ORM: retain upstream credits and identify the independently maintained fork.
 
 Rakko ORM acknowledgements
 ==========================

@@ -1,5 +1,4 @@
-<!-- Copyright (c) 2026 ropmyung (Rakko ORM additions).
-SPDX-License-Identifier: Apache-2.0 -->
+<!-- Added for Rakko ORM: document the Rakko model/query API, project identity and development workflow. -->
 
 # PyPika root exports
 

@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: integrate this module into the rakko package namespace.
 
 class TortoiseLoopSwitchWarning(UserWarning):
     """Emitted when a Tortoise connection detects an event loop change.

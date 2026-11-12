@@ -1,6 +1,4 @@
-.. Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-   Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-   SPDX-License-Identifier: Apache-2.0
+.. Modified for Rakko ORM: document the Rakko model/query API, project identity and development workflow.
 
 .. _changelog:
 
@@ -10,6 +8,20 @@ Rakko ORM changelog
 This file summarizes Rakko-specific changes. The project began as a fork of
 `Tortoise ORM <https://github.com/tortoise/tortoise-orm>`_; upstream releases
 are not presented as Rakko release history.
+
+1.0.0-alpha.2 — facade and release cleanup
+-----------------------------------------
+
+Maintained by ropmyung. The Python distribution version is ``1.0.0a2``.
+
+* Expose the main facade as ``Rakko`` and export ``meta`` from the package root.
+* Update framework integrations and internal calls to use the Rakko facade.
+* Consolidate copyright and attribution in distribution notices while preserving
+  concise modification notices in inherited files.
+* Add explicit types to migration writer tests and preserve runtime validation
+  coverage for invalid string conditions.
+* Include migration writer tests in CI and release type checks.
+* Refresh release metadata, documentation and versioned artifact paths.
 
 1.0.0-alpha.1 — migration fixes
 -------------------------------

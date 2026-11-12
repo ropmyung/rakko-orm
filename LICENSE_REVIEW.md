@@ -1,10 +1,8 @@
-<!-- Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-SPDX-License-Identifier: Apache-2.0 -->
+<!-- Modified for Rakko ORM: record upstream licensing, attribution and modification-notice handling. -->
 
 # Distribution license review
 
-Reviewed for Rakko ORM 1.0.0-alpha.1 (`1.0.0a1`), maintained by ropmyung.
+Reviewed for Rakko ORM 1.0.0-alpha.2 (`1.0.0a2`), maintained by ropmyung.
 
 Rakko is derived from Tortoise ORM and retains Apache-2.0. The review uses the
 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), especially
@@ -14,10 +12,25 @@ sections 4 and 6, and the
 | Requirement | Distribution treatment |
 | --- | --- |
 | Section 4(a): include the license | The original `LICENSE.txt` is included in source and wheel distributions. |
-| Section 4(b): identify modifications in modified files | Maintained source, documentation and configuration files carry Rakko modification notices. |
+| Section 4(b): identify modifications in modified files | Modified upstream files carry concise Rakko change notices and summaries; full copyright and license information is maintained in the distribution notice files. |
 | Section 4(c): preserve applicable upstream attribution | Original license copyright and existing notices are retained; `CONTRIBUTORS.rst` preserves upstream acknowledgements. |
 | Section 4(d): retain applicable upstream NOTICE contents, if supplied | No original NOTICE is present in this checkout. The upstream `develop` root inspected during this review lists `LICENSE.txt` and no NOTICE. Rakko's `NOTICE.txt` is explicitly identified as a new project notice. |
 | Section 6: trademark rights are not granted | Separate Rakko branding is used; README and NOTICE describe the fork without implying endorsement. |
+
+Copyright and notice layout
+---------------------------
+
+`NOTICE.txt` records Rakko's copyright and upstream attribution. `LICENSE.txt`
+retains the original license text, and `CONTRIBUTORS.rst` retains contributor
+acknowledgements. Repeated Rakko copyright and SPDX comment blocks are not used
+as source-file banners.
+
+Modified upstream files instead carry short notices describing their Rakko
+changes. Newly written files may carry a brief addition summary. Empty package
+markers do not receive a banner solely because they belong to this project.
+Existing upstream notices are preserved; this layout only replaces the repeated
+Rakko banners added during release preparation. Section 4(b) does not prescribe
+a particular template or require a detailed per-file changelog.
 
 The original license SHA-256 before and after release preparation is:
 

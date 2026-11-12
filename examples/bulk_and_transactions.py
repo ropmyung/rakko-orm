@@ -1,7 +1,3 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
-
 """Run with: uv run -m examples.bulk_and_transactions"""
 
 from examples.models import Guild, Member

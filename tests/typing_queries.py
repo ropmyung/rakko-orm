@@ -1,7 +1,3 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
-
 """Positive typing contracts, checked by test_typing.py with Pyright."""
 
 from typing import Any, assert_type

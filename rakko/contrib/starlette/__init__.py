@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: adapt integration imports and model/query interfaces to the rakko package.
 
 from __future__ import annotations
 
@@ -9,7 +7,7 @@ from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, cast
 
-from rakko import Tortoise
+from rakko import Rakko
 from rakko.connection import get_connections
 from rakko.log import logger
 
@@ -49,7 +47,7 @@ class RegisterTortoise(AbstractAsyncContextManager):
         self._enable_global_fallback = _enable_global_fallback
 
     async def init_orm(self) -> TortoiseContext:  # pylint: disable=W0612
-        ctx = await Tortoise.init(
+        ctx = await Rakko.init(
             config=self.config,
             config_file=self.config_file,
             db_url=self.db_url,
@@ -61,14 +59,14 @@ class RegisterTortoise(AbstractAsyncContextManager):
         )
         # Store context in app.state for explicit access when global fallback is disabled
         self.app.state._tortoise_context = ctx
-        logger.info("Tortoise-ORM started, %s, %s", get_connections()._get_storage(), Tortoise.apps)
+        logger.info("Tortoise-ORM started, %s, %s", get_connections()._get_storage(), Rakko.apps)
         if self.generate_schemas:
             logger.info("Tortoise-ORM generating schema")
-            await Tortoise.generate_schemas()
+            await Rakko.generate_schemas()
         return ctx
 
     async def close_orm(self) -> None:  # pylint: disable=W0612
-        await Tortoise.close_connections()
+        await Rakko.close_connections()
         # Clear context from app.state
         if hasattr(self.app.state, "_tortoise_context"):
             delattr(self.app.state, "_tortoise_context")

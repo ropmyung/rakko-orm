@@ -1,7 +1,3 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
-
 """Preview MySQL SQL without connecting: uv run --extra aiomysql -m examples.mysql_sql"""
 
 from rakko import Field, Model, fields, run_async

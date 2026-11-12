@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: validate Rakko code, distributions and database migrations.
 
 name: CI
 on:
@@ -26,7 +24,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: uv sync --frozen --all-groups --extra asyncpg --extra psycopg
       - run: uv run --no-sync pytest -q
-      - run: uv run --no-sync pyright rakko examples docs/sphinx_autodoc_typehints.py
+      - run: uv run --no-sync pyright rakko examples docs/sphinx_autodoc_typehints.py tests/migrations/test_writer.py
   distribution:
     runs-on: ubuntu-latest
     steps:

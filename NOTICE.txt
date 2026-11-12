@@ -17,6 +17,11 @@ model-bound PyPika expressions, query constructor parameter inference,
 field-reference query APIs, explicit automatic integer fields, metadata
 declarations, documentation and branding. See CHANGELOG.rst.
 
+Rakko copyright information is recorded in this notice. Modified upstream
+source files carry concise change notices and summaries instead of repeating
+the project copyright and license declaration. Existing upstream notices are
+preserved in their original locations.
+
 This notice was created for Rakko ORM; it is not an upstream NOTICE file.
 Rakko ORM is not an official Tortoise ORM release and does not imply upstream
 endorsement. The Apache License does not grant rights to upstream trademarks.

@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: configure Rakko branding, ocean colors and documentation metadata.
 
 """Sphinx configuration for Rakko ORM."""
 
@@ -66,6 +64,9 @@ html_theme_options = {
         },
     ],
     "features": ["navigation.sections", "navigation.top", "search.highlight"],
+}
+html_meta = {
+    "google-site-verification": "NJpL79DXNacVskxcy_hbP-QweGwKg3NsyhZZIiBCqSU"
 }
 latex_documents = [(root_doc, "rakko.tex", "Rakko ORM", author, "manual")]
 man_pages = [(root_doc, "rakko", "Rakko ORM documentation", [author], 1)]

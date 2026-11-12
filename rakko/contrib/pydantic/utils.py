@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: adapt integration imports and model/query interfaces to the rakko package.
 
 from __future__ import annotations
 
@@ -25,10 +23,10 @@ def get_annotations(cls: type[Model], method: Callable | None = None) -> dict[st
     """
     localns: dict[str, Any] = {}
     try:
-        from rakko import Tortoise
+        from rakko import Rakko
 
-        if Tortoise.apps:
-            for app_models in Tortoise.apps.values():
+        if Rakko.apps:
+            for app_models in Rakko.apps.values():
                 localns.update(app_models)
     except Exception:  # nosec B110
         pass

@@ -1,11 +1,9 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: target Rakko checks, documentation and versioned release artifacts.
 
 checkfiles = rakko/ examples/ tests/ conftest.py
 py_warn = PYTHONDEVMODE=1
 pytest_opts = -n auto --cov=rakko --cov-append --cov-branch --tb=native -q -m "not benchmark"
-release_dir = dist/releases/1.0.0a1
+release_dir = dist/releases/1.0.0a2
 
 TORTOISE_MYSQL_PASS ?= 123456
 TORTOISE_POSTGRES_PASS ?= 123456

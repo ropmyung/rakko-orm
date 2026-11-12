@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: generate expression constraints and field-reference indexes.
 
 from __future__ import annotations
 
@@ -541,7 +539,7 @@ class BaseSchemaGenerator(SchemaQuotingMixin):
         }
 
     def _get_models_to_create(self) -> list[type[Model]]:
-        from rakko import Tortoise
+        from rakko import Rakko
         from rakko.context import get_current_context
 
         # Check for active TortoiseContext first
@@ -550,7 +548,7 @@ class BaseSchemaGenerator(SchemaQuotingMixin):
             apps = ctx.apps
         else:
             # Fall back to global Tortoise.apps
-            apps = Tortoise.apps
+            apps = Rakko.apps
 
         models_to_create: list[type[Model]] = []
         if not apps:

@@ -1,6 +1,3 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM additions).
-# SPDX-License-Identifier: Apache-2.0
-
 import os
 from pathlib import Path
 from uuid import uuid4

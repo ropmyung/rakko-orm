@@ -1,6 +1,4 @@
-<!-- Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-SPDX-License-Identifier: Apache-2.0 -->
+<!-- Modified for Rakko ORM: document the Rakko model/query API, project identity and development workflow. -->
 
 <p align="center">
   <img src="docs/_static/rakko-logo.png" width="160" height="160" alt="Rakko ORM — a sea otter in an ocean wave">
@@ -10,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0 -->
 
 **Typed queries. Async by nature.**
 
-**1.0.0-alpha.1** · Python package version **1.0.0a1** · Maintained by **ropmyung**.
+**1.0.0-alpha.2** · Python package version **1.0.0a2** · Maintained by **ropmyung**.
 
 Rakko ORM is an asynchronous Python ORM built around typed model fields,
 natural Python conditions and MySQL-friendly database access.

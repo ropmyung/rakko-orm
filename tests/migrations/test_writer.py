@@ -1,16 +1,15 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM additions).
-# SPDX-License-Identifier: Apache-2.0
-
 import importlib
+from collections.abc import Callable
+from typing import cast
 
 import pytest
 from pypika_tortoise.context import DEFAULT_SQL_CONTEXT
 from pypika_tortoise.functions import Cast, Length
+from pypika_tortoise.terms import Criterion, Function
 from pypika_tortoise.terms import Field as SQLField
-from pypika_tortoise.terms import Function
 
 from rakko import fields
-from rakko.migrations.constraints import CheckConstraint, UniqueConstraint
+from rakko.migrations.constraints import CheckConstraint, Condition, UniqueConstraint
 from rakko.migrations.writer import ImportManager, render_value
 
 
@@ -20,7 +19,9 @@ from rakko.migrations.writer import ImportManager, render_value
 ])
 @pytest.mark.parametrize("unsigned", [False, True])
 @pytest.mark.parametrize("primary_key", [False, True])
-def test_integer_field_round_trip(factory, unsigned: bool, primary_key: bool) -> None:
+def test_integer_field_round_trip(
+    factory: Callable[..., fields.IntField[int]], unsigned: bool, primary_key: bool
+) -> None:
     original = factory(unsigned=unsigned, primary_key=primary_key)
     path, args, kwargs = original.deconstruct()
     module, name = path.rsplit('.', 1)
@@ -49,7 +50,7 @@ def test_integer_field_round_trip(factory, unsigned: bool, primary_key: bool) ->
     Length(SQLField("name")) > 0,
     SQLField("name") == "O'Reilly; value",
 ])
-def test_expression_serialization_is_portable(expression) -> None:
+def test_expression_serialization_is_portable(expression: Criterion) -> None:
     imports = ImportManager()
     code = render_value(expression, imports)
     namespace = {}
@@ -61,12 +62,15 @@ def test_expression_serialization_is_portable(expression) -> None:
 
 
 @pytest.mark.parametrize("constraint", [CheckConstraint, UniqueConstraint])
-def test_constraint_rejects_string_conditions(constraint) -> None:
+def test_constraint_rejects_string_conditions(
+    constraint: type[CheckConstraint] | type[UniqueConstraint],
+) -> None:
+    # Deliberately pass invalid types to verify runtime input validation.
     with pytest.raises(TypeError, match="Criterion"):
         if constraint is CheckConstraint:
-            constraint(check="amount > 0", name="positive")
-        else:
-            constraint(fields=("amount",), condition="amount > 0")
+            constraint(check="amount > 0", name="positive") # type: ignore
+        elif constraint is UniqueConstraint:
+            constraint(fields=("amount",), condition=cast(Condition, "amount > 0"))
 
 
 def test_special_function_is_not_silently_changed() -> None:

@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: expose the Rakko facade and typed model/field API.
 
 from __future__ import annotations
 
@@ -28,7 +26,7 @@ from rakko.fields.relational import (
     OneToOneFieldInstance,
 )
 from rakko.log import logger
-from rakko.models import MetaOption, Model, ModelMeta
+from rakko.models import MetaOption, Model, ModelMeta, meta
 from rakko.relations import reverse_relation
 from rakko.timezone import _reset_timezone_cache
 from rakko.utils import generate_schema_for_client
@@ -41,7 +39,7 @@ class classproperty:
     """
     Descriptor that acts like @property but works on classes.
 
-    This allows `Tortoise.apps` and `Tortoise._inited` to dynamically
+    This allows `Rakko.apps` and `Rakko._inited` to dynamically
     resolve to the current context's state without using a metaclass.
 
     Note: This only supports getters, not setters. Internal code must
@@ -55,10 +53,10 @@ class classproperty:
         return self.func(objtype)
 
 
-class _TortoiseMeta(type):
+class _RakkoMeta(type):
     """Metaclass that prevents accidental shadowing of classproperty descriptors.
 
-    Direct assignment like ``Tortoise.apps = None`` silently replaces the
+    Direct assignment like ``Rakko.apps = None`` silently replaces the
     classproperty descriptor with a plain attribute, breaking dynamic context
     resolution for the rest of the process. This metaclass intercepts such
     assignments and raises a clear error.
@@ -67,16 +65,16 @@ class _TortoiseMeta(type):
     def __setattr__(cls, name: str, value: Any) -> None:
         if name in cls.__dict__ and isinstance(cls.__dict__[name], classproperty):
             raise AttributeError(
-                f"Cannot assign to Tortoise.{name} — it is a classproperty that resolves "
+                f"Cannot assign to Rakko.{name} — it is a classproperty that resolves "
                 f"from the current TortoiseContext. Modify the context directly instead "
                 f"(e.g. ctx._apps = None)."
             )
         super().__setattr__(name, value)
 
 
-class Tortoise(metaclass=_TortoiseMeta):
+class Rakko(metaclass=_RakkoMeta):
     """
-    Tortoise ORM main interface.
+    Rakko ORM main interface.
 
     Provides static methods for initialization and access to ORM state.
     All state is managed by TortoiseContext instances.
@@ -101,7 +99,7 @@ class Tortoise(metaclass=_TortoiseMeta):
         ctx = cls._get_context()
         if ctx is None:
             raise ConfigurationError(
-                "Tortoise ORM is not initialized. Call Tortoise.init() first "
+                "Rakko ORM is not initialized. Call Rakko.init() first "
                 "or use 'async with TortoiseContext()' for explicit context management."
             )
         return ctx
@@ -120,7 +118,7 @@ class Tortoise(metaclass=_TortoiseMeta):
     @classproperty
     def _inited(cls) -> bool:
         """
-        Check if Tortoise is initialized.
+        Check if Rakko is initialized.
 
         Returns False if no context is active.
         """
@@ -129,7 +127,7 @@ class Tortoise(metaclass=_TortoiseMeta):
 
     @classmethod
     def is_inited(cls) -> bool:
-        """Check if Tortoise is initialized."""
+        """Check if Rakko is initialized."""
         ctx = cls._get_context()
         return ctx.inited if ctx else False
 
@@ -166,7 +164,7 @@ class Tortoise(metaclass=_TortoiseMeta):
            This is deprecated, please use :meth:`tortoise.models.Model.describe` instead
         """
         warnings.warn(
-            "Tortoise.describe_model(<MODEL>) is deprecated, please use <MODEL>.describe() instead",
+            "Rakko.describe_model(<MODEL>) is deprecated, please use <MODEL>.describe() instead",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -221,7 +219,7 @@ class Tortoise(metaclass=_TortoiseMeta):
         _init_relations: bool = True,
     ) -> None:
         """
-        Early initialisation of Tortoise ORM Models.
+        Early initialisation of Rakko ORM Models.
 
         Initialise the relationships between Models.
         This does not initialise any database connection.
@@ -242,7 +240,7 @@ class Tortoise(metaclass=_TortoiseMeta):
         _init_relations: bool = True,
     ) -> dict[str, type[Model]]:
         """
-        Early initialization of Tortoise ORM Models for a single app.
+        Early initialization of Rakko ORM Models for a single app.
 
         :param label: The app label, e.g. 'models'
         :param model_paths: Models paths to initialize
@@ -296,7 +294,7 @@ class Tortoise(metaclass=_TortoiseMeta):
         _enable_global_fallback: bool = False,
     ) -> TortoiseContext:
         """
-        Sets up Tortoise-ORM: loads apps and models, configures database connections but does not
+        Sets up Rakko-ORM: loads apps and models, configures database connections but does not
         connect to the database yet. The actual connection or connection pool is established
         lazily on first query execution.
 
@@ -357,7 +355,7 @@ class Tortoise(metaclass=_TortoiseMeta):
             A list of db routers str path or module.
         :param table_name_generator:
             A callable that generates table names. The model class will be passed as its argument.
-            If not provided, Tortoise will use the lowercase model name as the table name.
+            If not provided, Rakko will use the lowercase model name as the table name.
             Example: ``lambda cls: f"prefix_{cls.__name__.lower()}"``
         :param init_connections:
             When ``False``, skips initializing connection clients while still loading apps
@@ -407,7 +405,7 @@ class Tortoise(metaclass=_TortoiseMeta):
             apps_config = config_dict.get("apps", {})
             str_connection_config = cls.star_password(connections_config)
             logger.debug(
-                "Tortoise-ORM startup\n    connections: %s\n    apps: %s",
+                "Rakko-ORM startup\n    connections: %s\n    apps: %s",
                 str_connection_config,
                 str(apps_config),
             )
@@ -483,7 +481,7 @@ class Tortoise(metaclass=_TortoiseMeta):
         ctx = cls._get_context()
         if ctx is not None:
             await ctx.close_connections()
-        logger.info("Tortoise-ORM shutdown")
+        logger.info("Rakko-ORM shutdown")
 
     @classmethod
     async def _reset_apps(cls) -> None:
@@ -554,10 +552,10 @@ def run_async(coro: Coroutine, *, verbose: bool = False) -> None:
 
     Usage::
 
-        from tortoise import Tortoise, run_async
+        from tortoise import Rakko, run_async
 
         async def do_stuff():
-            await Tortoise.init(
+            await Rakko.init(
                 db_url='sqlite://db.sqlite3',
                 models={'models': ['app.models']}
             )
@@ -591,9 +589,9 @@ def run_async(coro: Coroutine, *, verbose: bool = False) -> None:
         portal.call(main)
 
 
-Rakko = Tortoise
+Rakko = Rakko
 
-__version__ = "1.0.0a1"
+__version__ = "1.0.0a2"
 
 __all__ = [
     "Criterion",
@@ -601,13 +599,14 @@ __all__ = [
     "BackwardOneToOneRelation",
     "Model",
     "MetaOption",
+    "meta",
     "Field",
     "Query",
     "reverse_relation",
     "ForeignKeyFieldInstance",
     "ManyToManyFieldInstance",
     "OneToOneFieldInstance",
-    "Tortoise",
+    "Rakko",
     "Rakko",
     "BaseDBAsyncClient",
     "TortoiseConfig",

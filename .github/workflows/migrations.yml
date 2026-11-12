@@ -1,5 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM additions).
-# SPDX-License-Identifier: Apache-2.0
+# Added for Rakko ORM: test migration cycles against live MySQL and PostgreSQL.
 
 name: Database migration tests
 on:

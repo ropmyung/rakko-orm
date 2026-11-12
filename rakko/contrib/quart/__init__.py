@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: adapt integration imports and model/query interfaces to the rakko package.
 
 from __future__ import annotations
 
@@ -11,7 +9,7 @@ from types import ModuleType
 
 from quart import Quart  # pylint: disable=E0401
 
-from rakko import Tortoise
+from rakko import Rakko
 from rakko.connection import get_connections
 from rakko.log import logger
 
@@ -90,15 +88,15 @@ def register_tortoise(
 
     @app.before_serving
     async def init_orm() -> None:  # pylint: disable=W0612
-        await Tortoise.init(config=config, config_file=config_file, db_url=db_url, modules=modules)
-        logger.info("Tortoise-ORM started, %s, %s", get_connections()._get_storage(), Tortoise.apps)
+        await Rakko.init(config=config, config_file=config_file, db_url=db_url, modules=modules)
+        logger.info("Tortoise-ORM started, %s, %s", get_connections()._get_storage(), Rakko.apps)
         if _generate_schemas:
             logger.info("Tortoise-ORM generating schema")
-            await Tortoise.generate_schemas()
+            await Rakko.generate_schemas()
 
     @app.after_serving
     async def close_orm() -> None:  # pylint: disable=W0612
-        await Tortoise.close_connections()
+        await Rakko.close_connections()
         logger.info("Tortoise-ORM shutdown")
 
     @app.cli.command("generate-schemas")  # type: ignore
@@ -106,11 +104,11 @@ def register_tortoise(
         """Populate DB with Tortoise-ORM schemas."""
 
         async def inner() -> None:
-            await Tortoise.init(
+            await Rakko.init(
                 config=config, config_file=config_file, db_url=db_url, modules=modules
             )
-            await Tortoise.generate_schemas()
-            await Tortoise.close_connections()
+            await Rakko.generate_schemas()
+            await Rakko.close_connections()
 
         logger.setLevel(logging.DEBUG)
         loop = asyncio.get_event_loop()

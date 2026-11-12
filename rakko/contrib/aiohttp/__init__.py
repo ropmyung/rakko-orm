@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: adapt integration imports and model/query interfaces to the rakko package.
 
 from __future__ import annotations
 
@@ -9,7 +7,7 @@ from types import ModuleType
 
 from aiohttp import web  # pylint: disable=E0401
 
-from rakko import Tortoise
+from rakko import Rakko
 from rakko.connection import get_connections
 from rakko.log import logger
 
@@ -85,14 +83,14 @@ def register_tortoise(
     """
 
     async def init_orm(app):  # pylint: disable=W0612
-        await Tortoise.init(config=config, config_file=config_file, db_url=db_url, modules=modules)
-        logger.info(f"Tortoise-ORM started, {get_connections()._get_storage()}, {Tortoise.apps}")
+        await Rakko.init(config=config, config_file=config_file, db_url=db_url, modules=modules)
+        logger.info(f"Tortoise-ORM started, {get_connections()._get_storage()}, {Rakko.apps}")
         if generate_schemas:
             logger.info("Tortoise-ORM generating schema")
-            await Tortoise.generate_schemas()
+            await Rakko.generate_schemas()
 
     async def close_orm(app):  # pylint: disable=W0612
-        await Tortoise.close_connections()
+        await Rakko.close_connections()
         logger.info("Tortoise-ORM shutdown")
 
     app.on_startup.append(init_orm)

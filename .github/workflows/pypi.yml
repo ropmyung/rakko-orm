@@ -1,6 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM modifications and additions).
-# Derived from Tortoise ORM; maintained and modified for Rakko ORM.
-# SPDX-License-Identifier: Apache-2.0
+# Modified for Rakko ORM: validate and publish Rakko distributions with trusted publishing.
 
 name: Release distributions
 on:
@@ -26,7 +24,7 @@ jobs:
           python-version: "3.12"
       - run: uv sync --frozen --all-groups --extra asyncpg --extra psycopg
       - run: uv run --no-sync pytest -q
-      - run: uv run --no-sync pyright rakko examples docs/sphinx_autodoc_typehints.py
+      - run: uv run --no-sync pyright rakko examples docs/sphinx_autodoc_typehints.py tests/migrations/test_writer.py
       - run: uv run --no-sync sphinx-build -W --keep-going -b html docs docs/_build/html
       - run: uv build --out-dir dist/release
       - run: uv run --no-sync twine check --strict dist/release/*

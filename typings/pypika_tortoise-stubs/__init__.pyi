@@ -1,5 +1,4 @@
-# Copyright (c) 2026 ropmyung (Rakko ORM additions).
-# SPDX-License-Identifier: Apache-2.0
+# Added for Rakko ORM: declare missing upstream root exports while retaining native types.
 
 """Declare upstream root exports; implementations and types stay upstream."""
 
