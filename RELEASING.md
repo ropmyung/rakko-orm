@@ -27,7 +27,7 @@ the wheel in a fresh environment outside the source import path and run SQLite
 CRUD. Verify the same version and license files when rebuilding from the sdist.
 Read `LICENSE_REVIEW.md` before distributing changes derived from upstream.
 
-`README.md` is the repository guide with local logo/documentation links.
+`README.rst` is the repository guide with local logo/documentation links.
 `README.pypi.md` is the self-contained package description used for PyPI.
 The repository and issue links point to https://github.com/ropmyung/rakko-orm.
 A documentation site URL will be added once hosting is configured.

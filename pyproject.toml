@@ -128,7 +128,7 @@ excludes = ["./**/.git", "./**/.*_cache", "./**/__pycache__", "docs/_build"]
 includes = ["rakko/"]
 source-includes = [
     "CHANGELOG.rst", "LICENSE.txt", "NOTICE.txt", "CONTRIBUTORS.rst",
-    "README.md", "README.pypi.md", "RELEASING.md", "LICENSE_REVIEW.md",
+    "README.rst", "README.pypi.md", "RELEASING.md", "LICENSE_REVIEW.md",
     "ASSETS.md", "docs/", "examples/", "tests/", "typings/", "conftest.py", "uv.lock",
 ]
 
