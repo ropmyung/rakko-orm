@@ -10,7 +10,7 @@ This file summarizes Rakko-specific changes. The project began as a fork of
 are not presented as Rakko release history.
 
 1.0.0-alpha.2 — facade and release cleanup
------------------------------------------
+------------------------------------------
 
 Maintained by ropmyung. The Python distribution version is ``1.0.0a2``.
 
