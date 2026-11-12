@@ -11,7 +11,7 @@ from rakko.contrib.blacksheep import register_tortoise
 @pytest.mark.asyncio
 async def test_register_tortoise_enables_global_fallback() -> None:
     with (
-        patch("rakko.contrib.blacksheep.Tortoise") as mocked_tortoise,
+        patch("rakko.contrib.blacksheep.Rakko") as mocked_tortoise,
         patch("rakko.contrib.blacksheep.get_connections"),
     ):
         mocked_tortoise.init = AsyncMock()
