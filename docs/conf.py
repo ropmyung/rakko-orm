@@ -65,8 +65,5 @@ html_theme_options = {
     ],
     "features": ["navigation.sections", "navigation.top", "search.highlight"],
 }
-html_meta = {
-    "google-site-verification": "NJpL79DXNacVskxcy_hbP-QweGwKg3NsyhZZIiBCqSU"
-}
 latex_documents = [(root_doc, "rakko.tex", "Rakko ORM", author, "manual")]
 man_pages = [(root_doc, "rakko", "Rakko ORM documentation", [author], 1)]
