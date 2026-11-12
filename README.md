@@ -5,6 +5,8 @@
 </p>
 
 # Rakko ORM
+.. image:: https://img.shields.io/pypi/v/rakko-orm.svg?style=flat
+   :target: https://pypi.python.org/pypi/rakko-orm
 
 **Typed queries. Async by nature.**
 
@@ -12,7 +14,7 @@
 
 Rakko ORM is an asynchronous Python ORM built around typed model fields,
 natural Python conditions and MySQL-friendly database access.
-Its name comes from *rakko*, the Japanese word for sea otter (해달).
+You can find the docs at [Documentation](https://ropmyung.github.io/rakko-orm).
 
 ```python
 members = await Member.filter(
