@@ -91,7 +91,7 @@ class BaseSchemaGenerator(SchemaQuotingMixin):
         column: str,
         default: Any,
     ) -> str:
-        return f' DEFAULT {default}'
+        return f" DEFAULT {default}"
 
     def _escape_default_value(self, default: Any):
         # Databases have their own way of supporting default value
@@ -485,7 +485,9 @@ class BaseSchemaGenerator(SchemaQuotingMixin):
         for constraint in model._meta.constraints:
             if isinstance(constraint, CheckConstraint):
                 condition = constraint.get_sql(model, self.client.query_class.SQL_CONTEXT)
-                fields_to_create.append(f'CONSTRAINT {self.quote(constraint.name)} CHECK ({condition})')
+                fields_to_create.append(
+                    f"CONSTRAINT {self.quote(constraint.name)} CHECK ({condition})"
+                )
             elif isinstance(constraint, UniqueConstraint):
                 columns = []
                 for value in constraint.fields:
@@ -493,14 +495,23 @@ class BaseSchemaGenerator(SchemaQuotingMixin):
                     columns.append(field.source_field or field.model_field_name)
                 name = constraint.name or self._get_index_name("uid", model, columns)
                 if constraint.condition is None:
-                    fields_to_create.append(self.UNIQUE_CONSTRAINT_CREATE_TEMPLATE.format(
-                        index_name=name, fields=", ".join(self.quote(column) for column in columns),
-                    ))
+                    fields_to_create.append(
+                        self.UNIQUE_CONSTRAINT_CREATE_TEMPLATE.format(
+                            index_name=name,
+                            fields=", ".join(self.quote(column) for column in columns),
+                        )
+                    )
                 else:
                     if self.DIALECT not in {"postgres", "sqlite"}:
-                        raise NotImplementedError(f'Conditional unique constraints are not supported on {self.DIALECT}')
-                    condition = constraint.get_condition_sql(model, self.client.query_class.SQL_CONTEXT)
-                    constraint_indexes.append(f'CREATE UNIQUE INDEX {self.quote(name)} ON {qualified_table_name} ({", ".join(self.quote(column) for column in columns)}) WHERE {condition};')
+                        raise NotImplementedError(
+                            f"Conditional unique constraints are not supported on {self.DIALECT}"
+                        )
+                    condition = constraint.get_condition_sql(
+                        model, self.client.query_class.SQL_CONTEXT
+                    )
+                    constraint_indexes.append(
+                        f"CREATE UNIQUE INDEX {self.quote(name)} ON {qualified_table_name} ({', '.join(self.quote(column) for column in columns)}) WHERE {condition};"
+                    )
 
         field_indexes_sqls = self._get_field_indexes_sqls(model, fields_with_index, safe)
         field_indexes_sqls.extend(constraint_indexes)
@@ -542,7 +553,7 @@ class BaseSchemaGenerator(SchemaQuotingMixin):
         from rakko import Rakko
         from rakko.context import get_current_context
 
-        # Check for active TortoiseContext first
+        # Check for active RakkoContext first
         ctx = get_current_context()
         if ctx is not None and ctx._inited and ctx.apps is not None:
             apps = ctx.apps

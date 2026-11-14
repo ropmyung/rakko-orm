@@ -4,14 +4,13 @@ Configuration
 =============
 
 A context owns model registration, database clients and connection lifetime.
-Import ``TortoiseContext`` from ``rakko.context``; this is a retained helper
-name inside Rakko, not an import from a separately installed Tortoise package.
+Import ``RakkoContext`` from ``rakko.context``.
 
 .. code-block:: python
 
-    from rakko.context import TortoiseContext
+    from rakko.context import RakkoContext
 
-    async with TortoiseContext() as context:
+    async with RakkoContext() as context:
         await context.init(
             db_url="sqlite://:memory:",
             modules={"models": ["examples.models"]},

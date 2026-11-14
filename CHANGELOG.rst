@@ -9,6 +9,29 @@ This file summarizes Rakko-specific changes. The project began as a fork of
 `Tortoise ORM <https://github.com/tortoise/tortoise-orm>`_; upstream releases
 are not presented as Rakko release history.
 
+1.0.0-alpha.3 — model constraints and context naming
+--------------------------------------------------------
+
+Maintained by ropmyung. The Python distribution version is ``1.0.0a3``.
+
+* Add ``Meta.check_constraint`` and ``Meta.unique_constraint`` decorators,
+  including support for class methods and model-class callbacks.
+* Pass the model class to callable CHECK and conditional UNIQUE expressions.
+  Replace ``lambda: Account.balance >= 0`` with
+  ``lambda model: model.balance >= 0`` in constraint declarations.
+* Preserve resolved expressions in migration snapshots and correct constraint
+  equality, hashing and CHECK expression comparison during state diffs.
+* Document PostgreSQL/SQLite support for conditional unique constraints.
+* Add runnable constraint examples covering nested metadata, ``MetaOption(...)``,
+  ``MetaOption()``, stock validation, discounts and soft-deleted email reuse.
+* Rename the explicit context class to ``RakkoContext`` and update integrations,
+  examples and documentation. Import it from ``rakko.context`` instead of
+  ``TortoiseContext``.
+* Move shared field constructor keyword types to ``rakko.fields.kwargs``.
+* Modernize legacy generic classes, functions and type aliases for Python 3.12,
+  and resolve lint violations so ``make style`` completes successfully.
+* Remove the examples README and keep example instructions in the documentation.
+
 1.0.0-alpha.2 — facade and release cleanup
 ------------------------------------------
 

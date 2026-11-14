@@ -278,7 +278,11 @@ def _inherit_operator(method: Callable[..., Any]) -> Callable[..., Any]:
     @wraps(method)
     def operation(self, *args, **kwargs):
         term = _unwrap(method(self.as_term(), *map(_unwrap, args), **kwargs))
-        return Criterion(term) if isinstance(term, PypikaCriterion) and not isinstance(term, PypikaFunction) else Query(term)
+        return (
+            Criterion(term)
+            if isinstance(term, PypikaCriterion) and not isinstance(term, PypikaFunction)
+            else Query(term)
+        )
 
     return operation
 
@@ -300,6 +304,7 @@ class Criterion[M: Model](PypikaCriterion):
         return self.base.get_sql(ctx)
 
     if TYPE_CHECKING:
+
         def __and__(self, other: Criterion[M]) -> Criterion[M]: ...
         def __or__(self, other: Criterion[M]) -> Criterion[M]: ...
         def __xor__(self, other: Criterion[M]) -> Criterion[M]: ...
@@ -312,7 +317,7 @@ for _name in ("__and__", "__or__", "__xor__", "__invert__", "negate"):
 
 class _BitwiseNot(Negative):
     def get_sql(self, ctx: SqlContext) -> str:
-        return format_alias_sql(f'~({self.term.get_sql(ctx)})', self.alias, ctx)
+        return format_alias_sql(f"~({self.term.get_sql(ctx)})", self.alias, ctx)
 
 
 def _field_path(field: Field, model: type[Model]) -> str:
@@ -328,8 +333,8 @@ def _field_path(field: Field, model: type[Model]) -> str:
         and getattr(model._meta.fields_map[relation_name], "related_model") is field.model
     ]
     if len(relations) != 1:
-        raise FieldError(f'Cannot unambiguously join {model.__name__} to {field.model.__name__}')
-    return f'{relations[0]}__{name}'
+        raise FieldError(f"Cannot unambiguously join {model.__name__} to {field.model.__name__}")
+    return f"{relations[0]}__{name}"
 
 
 type FieldReference = str | Query[Any, Any] | Field[Any] | reverse_relation[Any]
@@ -341,17 +346,17 @@ def field_name(value: FieldReference, model: type[Model], *, local: bool = False
         return value
     if isinstance(value, reverse_relation):
         if inspect.getattr_static(model, value.name, None) is not value:
-            raise FieldError(f'Expected a relation belonging to {model.__name__}')
+            raise FieldError(f"Expected a relation belonging to {model.__name__}")
         relation = model._meta.fields_map.get(value.name)
         if not isinstance(relation, Field):
-            raise FieldError(f'Relation {value.name!r} has not been initialized')
+            raise FieldError(f"Relation {value.name!r} has not been initialized")
         value = relation
     while isinstance(value, Query):
         value = value.base
     if not isinstance(value, Field):
         raise FieldError("Expected a field reference")
     if local and model._meta.fields_map.get(value.model_field_name) is not value:
-        raise FieldError(f'Expected a field belonging to {model.__name__}')
+        raise FieldError(f"Expected a field belonging to {model.__name__}")
     return _field_path(value, model)
 
 
@@ -365,7 +370,7 @@ def ordering_name(value: Any, model: type[Model]) -> str:
         value = value.base
     prefix = ""
     if isinstance(value, Negative):
-        prefix, value = '-', value.term
+        prefix, value = "-", value.term
     while isinstance(value, Query):
         value = value.base
     if not isinstance(value, Field):
@@ -384,7 +389,7 @@ def _resolve_field(field: Field, context: ResolveContext) -> ResolveResult:
         if isinstance(field, (ForeignKeyFieldInstance, OneToOneFieldInstance)):
             name = field.source_field
         if name not in context.model._meta.fields_db_projection:
-            raise FieldError(f'Field {field.model_field_name!r} has no database column')
+            raise FieldError(f"Field {field.model_field_name!r} has no database column")
         output_field = context.model._meta.fields_map[name]
         term = context.table[context.model._meta.fields_db_projection[name]]
         function_cast = output_field.get_for_dialect(
@@ -425,7 +430,7 @@ def resolve_term(value: Any, context: ResolveContext) -> ResolveResult:
                 reference = getattr(field, "reference", None)
                 if reference is not None and not isinstance(literal, reference.related_model):
                     raise FieldError(
-                        f'Expected a {reference.related_model.__name__} relation value'
+                        f"Expected a {reference.related_model.__name__} relation value"
                     )
                 literal = (
                     getattr(literal, reference.to_field_instance.model_field_name)
@@ -508,6 +513,7 @@ class Query[M: Model, T](Term, Expression):
     __hash__ = object.__hash__
 
     if TYPE_CHECKING:
+
         def __pos__(self) -> Query[M, T]: ...
         def __neg__(self) -> Query[M, T]: ...
         def __add__(self, other: T | Query[M, T]) -> Query[M, T]: ...
@@ -539,7 +545,9 @@ class Query[M: Model, T](Term, Expression):
         def notnull(self) -> Criterion[M]: ...
 
     def isin(self, values: Iterable[T | Query[M, T]] | Term) -> Criterion[M]:
-        return _inherit_operator(Term.isin)(self, list(values) if not isinstance(values, Term) else values)
+        return _inherit_operator(Term.isin)(
+            self, list(values) if not isinstance(values, Term) else values
+        )
 
     def notin(self, values: Iterable[T | Query[M, T]] | Term) -> Criterion[M]:
         return _inherit_operator(lambda term, values: Term.isin(term, values).negate())(
@@ -548,8 +556,6 @@ class Query[M: Model, T](Term, Expression):
 
     def __invert__(self) -> Query[M, T]:
         return Query(_BitwiseNot(self.as_term()))
-
-
 
     def __init__(self, base: Any) -> None:
         super().__init__()
@@ -574,7 +580,9 @@ class Query[M: Model, T](Term, Expression):
         return str(self.base)
 
     def get_sql(self, ctx: SqlContext) -> str:
-        return self.base.model_field_name if isinstance(self.base, Field) else self.base.get_sql(ctx)
+        return (
+            self.base.model_field_name if isinstance(self.base, Field) else self.base.get_sql(ctx)
+        )
 
     def resolve(self, resolve_context: ResolveContext) -> ResolveResult:
         return resolve_term(self.base, resolve_context)
@@ -584,7 +592,11 @@ class Query[M: Model, T](Term, Expression):
         from rakko.fields.base import Field
 
         term = self.base.term if isinstance(self.base, Negative) else self.base
-        field = next(node.base for node in term.nodes_() if isinstance(node, Query) and isinstance(node.base, Field))
+        field = next(
+            node.base
+            for node in term.nodes_()
+            if isinstance(node, Query) and isinstance(node.base, Field)
+        )
         model = cast("type[M]", field.model)
         return self.resolve(ResolveContext(model, model._meta.basetable, {}, {})).term.get_sql(
             model._meta.db.query_class.SQL_CONTEXT
@@ -622,7 +634,7 @@ def _process_filter_kwarg(
         join = (
             filter_info["table"],
             table[model._meta.db_pk_column]
-                == filter_info["table"][filter_info.get("backward_key", "")],
+            == filter_info["table"][filter_info.get("backward_key", "")],
         )
         if "value_encoder" in filter_info:
             value = filter_info["value_encoder"](value, model)
@@ -637,9 +649,7 @@ def _process_filter_kwarg(
     op = filter_info["operator"]
     term: Term = table[filter_info.get("source_field", filter_info["field"])]
     if field_object is not None:
-        func = field_object.get_for_dialect(
-            model._meta.db.capabilities.dialect, "function_cast"
-        )
+        func = field_object.get_for_dialect(model._meta.db.capabilities.dialect, "function_cast")
         if func is not None:
             term = func(field_object, term)
     criterion = op(term, value)
@@ -716,9 +726,12 @@ def resolve_filter(context: ResolveContext, key: str, value: Any) -> ResolveResu
     if key in context.custom_filters:
         info = context.custom_filters[key]
         result = resolve_term(context.annotations[info["field"]], context)
-        operation = context.model._meta.db.executor_class.get_overridden_filter_func(
-            filter_func=info["operator"], filter_info=info
-        ) or info["operator"]
+        operation = (
+            context.model._meta.db.executor_class.get_overridden_filter_func(
+                filter_func=info["operator"], filter_info=info
+            )
+            or info["operator"]
+        )
         return ResolveResult(operation(result.term, value), result.joins)
 
     relation_name, _, lookup = key.partition("__")
@@ -728,8 +741,11 @@ def resolve_filter(context: ResolveContext, key: str, value: Any) -> ResolveResu
         relation = cast(RelationalField, context.model._meta.fields_map[relation_name])
         joins = get_joins_for_related_field(context.table, relation, relation_name)
         result = resolve_filter(
-            ResolveContext(relation.related_model, joins[-1][0], context.annotations, context.custom_filters),
-            lookup, value,
+            ResolveContext(
+                relation.related_model, joins[-1][0], context.annotations, context.custom_filters
+            ),
+            lookup,
+            value,
         )
         return ResolveResult(result.term, joins + result.joins)
 
@@ -761,9 +777,7 @@ class Function(Expression):
     # Enable populate_field_object where we want to try and preserve the field type.
     populate_field_object = False
 
-    def __init__(
-        self, field: str | Expression | Term, *default_values: Any
-    ) -> None:
+    def __init__(self, field: str | Expression | Term, *default_values: Any) -> None:
         self.field = field
         self.field_object: Field | None = None
         self.default_values = default_values

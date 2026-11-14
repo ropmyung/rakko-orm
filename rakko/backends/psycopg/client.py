@@ -204,7 +204,6 @@ class PsycopgClient(postgres_client.BasePostgresClient):
             await pool.close(10)
             self.log.debug("Closed connection pool %s with params: %s", self._pool, self._template)
 
-
     async def _translate_exceptions[R](
         self, func: Callable[..., Awaitable[R]], *args: Any, **kwargs: Any
     ) -> R:

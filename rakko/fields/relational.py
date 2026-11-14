@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import warnings
 from collections.abc import AsyncGenerator, Generator, Iterator
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 from pypika_tortoise.queries import Table
 
@@ -16,10 +16,9 @@ if TYPE_CHECKING:  # pragma: nocoverage
 
     from rakko.backends.base.client import BaseDBAsyncClient
     from rakko.expressions import Criterion, Expression, Query
-    from rakko.fields.base import ManyToManyFieldKwargs, RelationalFieldKwargs
+    from rakko.fields.kwargs import ManyToManyFieldKwargs, RelationalFieldKwargs
     from rakko.models import Model
     from rakko.queryset import QuerySet
-
 
 
 MODEL = TypeVar("MODEL", bound="Model")
@@ -38,7 +37,7 @@ class _NoneAwaitable:
 NoneAwaitable = _NoneAwaitable()
 
 
-class ReverseRelation(Generic[MODEL]):
+class ReverseRelation[MODEL: "Model"]:
     """
     Relation container for :func:`.ForeignKeyField`.
     """
@@ -288,7 +287,9 @@ class RelationalField(Field[MODEL]):
     if TYPE_CHECKING:
 
         @overload
-        def __get__[Owner: Model](self, instance: None, owner: type[Owner]) -> Query[Owner, MODEL]: ...
+        def __get__[Owner: Model](
+            self, instance: None, owner: type[Owner]
+        ) -> Query[Owner, MODEL]: ...
 
         @overload
         def __get__(self, instance: Model, owner: type[Model]) -> MODEL: ...

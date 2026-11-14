@@ -14,7 +14,7 @@ Rakko ORM
 
 **Typed queries. Async by nature.**
 
-**1.0.0-alpha.2** · Python package version **1.0.0a2** · Maintained by **ropmyung**.
+**1.0.0-alpha.3** · Python package version **1.0.0a3** · Maintained by **ropmyung**.
 
 Rakko ORM is an asynchronous Python ORM built around typed model fields,
 natural Python conditions and MySQL-friendly database access.
@@ -74,7 +74,7 @@ A small application
     import asyncio
 
     from rakko import Field, Model, fields
-    from rakko.context import TortoiseContext
+    from rakko.context import RakkoContext
 
     class User(Model):
         id: Field[int] = fields.AutoField()
@@ -82,7 +82,7 @@ A small application
         age: Field[int | None] = fields.IntField(null=True)
 
     async def main() -> None:
-        async with TortoiseContext() as context:
+        async with RakkoContext() as context:
             await context.init(db_url="sqlite://:memory:", modules={"models": [__name__]})
             await context.generate_schemas()
 
@@ -106,7 +106,7 @@ Read and contribute
 - `Model and field declarations <docs/models.rst>`_
 - `Query API <docs/query.rst>`_
 - `Changes from Tortoise ORM <docs/migration_guide.rst>`_
-- `Runnable examples <examples/README.md>`_
+- `Runnable examples <docs/examples.rst>`_
 - `Development and contribution guide <docs/CONTRIBUTING.rst>`_
 - `Concise changelog <CHANGELOG.rst>`_
 - `Release preparation and publishing <RELEASING.md>`_

@@ -3,7 +3,7 @@
 """
 Context-based state management for Tortoise ORM.
 
-This module provides the TortoiseContext class which encapsulates all Tortoise ORM state
+This module provides the RakkoContext class which encapsulates all Tortoise ORM state
 (connections, apps, init status, timezone, routers) into a single context object. This enables:
 
 - Parallel test execution (each worker gets its own context)
@@ -11,7 +11,7 @@ This module provides the TortoiseContext class which encapsulates all Tortoise O
 - Clean teardown (context owns all resources)
 
 Usage:
-    async with TortoiseContext() as ctx:
+    async with RakkoContext() as ctx:
         await ctx.init(db_url="sqlite://:memory:", modules={"models": ["myapp.models"]})
         await ctx.generate_schemas()
         # Models automatically use ctx.connections when context is active
@@ -43,7 +43,7 @@ if TYPE_CHECKING:
 
 
 # ContextVar for tracking the current active context
-_current_context: contextvars.ContextVar[TortoiseContext | None] = contextvars.ContextVar(
+_current_context: contextvars.ContextVar[RakkoContext | None] = contextvars.ContextVar(
     "tortoise_context", default=None
 )
 
@@ -51,18 +51,18 @@ _current_context: contextvars.ContextVar[TortoiseContext | None] = contextvars.C
 # This is used by RegisterTortoise (FastAPI) where asgi-lifespan runs lifespan
 # in a background task, but requests/tests run in a different task.
 # Disabled by default; enabled via Tortoise.init(_enable_global_fallback=True).
-_global_context: TortoiseContext | None = None
+_global_context: RakkoContext | None = None
 
 
-def get_current_context() -> TortoiseContext | None:
+def get_current_context() -> RakkoContext | None:
     """
-    Get the currently active TortoiseContext, or None if no context is active.
+    Get the currently active RakkoContext, or None if no context is active.
 
     Checks the contextvar first (for proper isolation), then falls back to
     the global context if one was set via _enable_global_fallback.
 
     Returns:
-        The current TortoiseContext if one is active, None otherwise.
+        The current RakkoContext if one is active, None otherwise.
     """
     ctx = _current_context.get()
     if ctx is not None:
@@ -70,7 +70,7 @@ def get_current_context() -> TortoiseContext | None:
     return _global_context
 
 
-def set_global_context(ctx: TortoiseContext) -> None:
+def set_global_context(ctx: RakkoContext) -> None:
     """
     Set the global fallback context for cross-task access.
 
@@ -80,49 +80,49 @@ def set_global_context(ctx: TortoiseContext) -> None:
     explicit context passing.
 
     Args:
-        ctx: The TortoiseContext to set as global fallback.
+        ctx: The RakkoContext to set as global fallback.
 
     Raises:
         ConfigurationError: If a global context is already set. Only one global
             context can be active at a time. For multiple isolated contexts,
-            use explicit TortoiseContext() without global fallback.
+            use explicit RakkoContext() without global fallback.
     """
     global _global_context
     if _global_context is not None:
         raise ConfigurationError(
             "Global context fallback is already enabled by another Tortoise.init() call. "
             "Only one global context can be active at a time. "
-            "Use explicit TortoiseContext() for multiple isolated contexts, "
+            "Use explicit RakkoContext() for multiple isolated contexts, "
             "or set _enable_global_fallback=False for secondary apps."
         )
     _global_context = ctx
 
 
-def require_context() -> TortoiseContext:
+def require_context() -> RakkoContext:
     """
-    Get the currently active TortoiseContext, raising if none is active.
+    Get the currently active RakkoContext, raising if none is active.
 
     Returns:
-        The current TortoiseContext.
+        The current RakkoContext.
 
     Raises:
-        RuntimeError: If no TortoiseContext is currently active.
+        RuntimeError: If no RakkoContext is currently active.
     """
     ctx = get_current_context()
     if ctx is None:
         raise RuntimeError(
-            "No TortoiseContext is currently active. "
-            "Use 'async with TortoiseContext() as ctx:' to create one, "
+            "No RakkoContext is currently active. "
+            "Use 'async with RakkoContext() as ctx:' to create one, "
             "or call Tortoise.init() for global state."
         )
     return ctx
 
 
-class TortoiseContext:
+class RakkoContext:
     """
     Encapsulates all Tortoise ORM state for a single execution context.
 
-    Each TortoiseContext instance owns:
+    Each RakkoContext instance owns:
     - A ConnectionHandler with database connections
     - An Apps registry with model definitions
     - Initialization state tracking
@@ -137,7 +137,7 @@ class TortoiseContext:
     automatically resolve the correct connections without explicit passing.
 
     Example:
-        async with TortoiseContext() as ctx:
+        async with RakkoContext() as ctx:
             await ctx.init(
                 db_url="sqlite://:memory:",
                 modules={"models": ["myapp.models"]}
@@ -151,7 +151,7 @@ class TortoiseContext:
         self._connections: ConnectionHandler | None = None
         self._apps: Apps | None = None
         self._inited: bool = False
-        self._token: contextvars.Token[TortoiseContext | None] | None = None
+        self._token: contextvars.Token[RakkoContext | None] | None = None
         self._table_name_generator: Callable[[type[Model]], str] | None = None
         self._default_connection: str | None = None
         # Timezone settings
@@ -261,7 +261,7 @@ class TortoiseContext:
         This method is self-sufficient and can be used directly in tests without
         going through Tortoise.init():
 
-            async with TortoiseContext() as ctx:
+            async with RakkoContext() as ctx:
                 await ctx.init(db_url="sqlite://:memory:", modules={"models": ["myapp.models"]})
                 # Run tests...
 
@@ -447,7 +447,7 @@ class TortoiseContext:
         if _global_context is self:
             _global_context = None
 
-    def __enter__(self) -> TortoiseContext:
+    def __enter__(self) -> RakkoContext:
         """
         Enter the context manager and set this context as current.
 
@@ -465,7 +465,7 @@ class TortoiseContext:
             _current_context.reset(self._token)
             self._token = None
 
-    async def __aenter__(self) -> TortoiseContext:
+    async def __aenter__(self) -> RakkoContext:
         """
         Enter the async context manager and set this context as current.
 
@@ -495,7 +495,7 @@ async def tortoise_test_context(
     use_tz: bool = True,
     timezone: str = "UTC",
     routers: list[str | type] | None = None,
-) -> AsyncIterator[TortoiseContext]:
+) -> AsyncIterator[RakkoContext]:
     """
     Async context manager for isolated test database setup.
 
@@ -518,7 +518,7 @@ async def tortoise_test_context(
             assert user.id is not None
 
     Features:
-    - Creates isolated TortoiseContext (no global state pollution)
+    - Creates isolated RakkoContext (no global state pollution)
     - Creates fresh database and generates schemas
     - Cleans up connections on exit
     - xdist-safe (each worker gets own context)
@@ -533,7 +533,7 @@ async def tortoise_test_context(
         routers: List of database router paths or classes.
 
     Yields:
-        An initialized TortoiseContext ready for use.
+        An initialized RakkoContext ready for use.
     """
     import warnings
 
@@ -541,7 +541,7 @@ async def tortoise_test_context(
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=TortoiseLoopSwitchWarning)
-        ctx = TortoiseContext()
+        ctx = RakkoContext()
         async with ctx:
             config = generate_config(
                 db_url,
@@ -561,12 +561,9 @@ async def tortoise_test_context(
 
 
 __all__ = [
-    "TortoiseContext",
+    "RakkoContext",
     "get_current_context",
     "require_context",
     "set_global_context",
     "tortoise_test_context",
 ]
-
-
-RakkoContext = TortoiseContext

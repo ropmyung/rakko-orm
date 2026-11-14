@@ -8,7 +8,7 @@ import types
 from collections import defaultdict
 from collections.abc import AsyncIterator, Callable, Collection, Generator, Iterable, Sequence
 from copy import copy
-from typing import TYPE_CHECKING, Any, Generic, Literal, Protocol, Self, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, Literal, Protocol, Self, TypeVar, cast, overload
 
 from pypika_tortoise import JoinType, Order, Table
 from pypika_tortoise.analytics import Count
@@ -67,7 +67,6 @@ if TYPE_CHECKING:  # pragma: nocoverage
 
 MODEL = TypeVar("MODEL", bound="Model")
 T_co = TypeVar("T_co", covariant=True)
-SINGLE = TypeVar("SINGLE", bound=bool)
 
 
 def _model_kwargs[**P, M: Model](
@@ -101,13 +100,17 @@ class QuerySetSingle(Protocol[T_co]):
         self, *args: FieldReference | Prefetch
     ) -> QuerySetSingle[T_co]: ...  # pragma: nocoverage
 
-    def select_related(self, *args: FieldReference) -> QuerySetSingle[T_co]: ...  # pragma: nocoverage
+    def select_related(
+        self, *args: FieldReference
+    ) -> QuerySetSingle[T_co]: ...  # pragma: nocoverage
 
     def annotate(
         self, **kwargs: Expression | Term
     ) -> QuerySetSingle[T_co]: ...  # pragma: nocoverage
 
-    def only(self, *fields_for_select: FieldReference) -> QuerySetSingle[T_co]: ...  # pragma: nocoverage
+    def only(
+        self, *fields_for_select: FieldReference
+    ) -> QuerySetSingle[T_co]: ...  # pragma: nocoverage
 
     def values_list(
         self, *fields_: FieldReference, flat: bool = False
@@ -118,7 +121,7 @@ class QuerySetSingle(Protocol[T_co]):
     ) -> ValuesQuery[Literal[True]]: ...  # pragma: nocoverage
 
 
-class _ChooseDBMixin(Generic[MODEL]):
+class _ChooseDBMixin[MODEL: "Model"]:
     _db: BaseDBAsyncClient | None
     model: type[MODEL]
 
@@ -310,7 +313,9 @@ class AwaitableQuery[**P, MODEL: Model](_ChooseDBMixin[MODEL]):
                     # The annotation is not in SELECT, resolve it
                     annotation = annotations[field_name]
                     if isinstance(annotation, Term):
-                        term = resolve_term(annotation, ResolveContext(self.model, table, annotations, {})).term
+                        term = resolve_term(
+                            annotation, ResolveContext(self.model, table, annotations, {})
+                        ).term
                     else:
                         term = annotation.resolve(
                             ResolveContext(
@@ -344,9 +349,15 @@ class AwaitableQuery[**P, MODEL: Model](_ChooseDBMixin[MODEL]):
         annotation_info: dict[str, ResolveResult] = {}
         for key, annotation in self._annotations.items():
             if isinstance(annotation, Term):
-                annotation_info[key] = resolve_term(annotation, ResolveContext(
-                    self.model, self.model._meta.basetable, self._annotations, self._custom_filters
-                ))
+                annotation_info[key] = resolve_term(
+                    annotation,
+                    ResolveContext(
+                        self.model,
+                        self.model._meta.basetable,
+                        self._annotations,
+                        self._custom_filters,
+                    ),
+                )
             else:
                 annotation_info[key] = annotation.resolve(
                     ResolveContext(
@@ -700,7 +711,7 @@ class QuerySet[**P, MODEL: Model](AwaitableQuery[P, MODEL]):
                     path = resolve_field_name(target._meta.pk, self.model).rpartition("__")[0]
                     table_name = self.model._meta.basetable.get_table_name()
                     if path:
-                        table_name += f'__{path}'
+                        table_name += f"__{path}"
                 queryset._select_for_update_of.add(table_name)
             queryset._select_for_update_no_key = (
                 no_key and self.capabilities.support_for_no_key_update
@@ -734,7 +745,9 @@ class QuerySet[**P, MODEL: Model](AwaitableQuery[P, MODEL]):
         queryset._group_bys = tuple(resolve_field_name(field, self.model) for field in fields)
         return queryset
 
-    def values_list(self, *fields_: FieldReference, flat: bool = False) -> ValuesListQuery[Literal[False]]:
+    def values_list(
+        self, *fields_: FieldReference, flat: bool = False
+    ) -> ValuesListQuery[Literal[False]]:
         """
         Make QuerySet returns list of tuples for given args instead of objects.
 
@@ -860,7 +873,9 @@ class QuerySet[**P, MODEL: Model](AwaitableQuery[P, MODEL]):
         self, using_db: BaseDBAsyncClient | None = None, /, *args: P.args, **kwargs: P.kwargs
     ) -> CreateQuery[P, MODEL]:
         """Create a record with the model constructor's parameter types."""
-        return CreateQuery(cast(Callable[P, MODEL], self.model), using_db or self._db, *args, **kwargs)
+        return CreateQuery(
+            cast(Callable[P, MODEL], self.model), using_db or self._db, *args, **kwargs
+        )
 
     def update(
         self, criterion: Criterion[MODEL] | None = None, /, *args: P.args, **kwargs: P.kwargs
@@ -1333,7 +1348,7 @@ class QuerySet[**P, MODEL: Model](AwaitableQuery[P, MODEL]):
             self.query = self.query.select(
                 *[
                     table[model._meta.fields_db_projection[field]].as_(
-                        f'{table.get_table_name()}.{field}'
+                        f"{table.get_table_name()}.{field}"
                     )
                     for field in data_fields
                 ]
@@ -1481,9 +1496,7 @@ class UpdateQuery[**P, MODEL: Model](AwaitableQuery[P, MODEL]):
         "values",
     )
 
-    def __init__(
-        self, queryset: QuerySet[P, MODEL], /, *args: P.args, **kwargs: P.kwargs
-    ) -> None:
+    def __init__(self, queryset: QuerySet[P, MODEL], /, *args: P.args, **kwargs: P.kwargs) -> None:
         self._init_context(
             model=cast(Callable[P, MODEL], queryset.model),
             update_kwargs=_model_kwargs(cast(Callable[P, MODEL], queryset.model), *args, **kwargs),
@@ -1558,13 +1571,14 @@ class UpdateQuery[**P, MODEL: Model](AwaitableQuery[P, MODEL]):
                     raise FieldError(f"Field {key} is virtual and can not be updated") from e
 
                 if isinstance(value, (Expression, Term)):
-                    value = resolve_term(value,
+                    value = resolve_term(
+                        value,
                         ResolveContext(
                             model=self.model,
                             table=table,
                             annotations=self._annotations,
                             custom_filters=self._custom_filters,
-                        )
+                        ),
                     ).term
                 else:
                     value = self.model._meta.fields_map[key].to_db_value(value, None)
@@ -1897,7 +1911,7 @@ class FieldSelectQuery(AwaitableQuery):
         return group_bys
 
 
-class ValuesListQuery(FieldSelectQuery, Generic[SINGLE]):
+class ValuesListQuery[SINGLE: bool](FieldSelectQuery):
     __slots__ = (
         "_distinct",
         "_fields_for_select_list",
@@ -2033,7 +2047,7 @@ class ValuesListQuery(FieldSelectQuery, Generic[SINGLE]):
         return lst_values
 
 
-class ValuesQuery(FieldSelectQuery, Generic[SINGLE]):
+class ValuesQuery[SINGLE: bool](FieldSelectQuery):
     __slots__ = (
         "_distinct",
         "_fields_for_select",
@@ -2185,7 +2199,7 @@ class RawSQLQuery[M: Model](AwaitableQuery[..., M]):
         return self._execute().__await__()
 
 
-class BulkUpdateQuery(UpdateQuery[..., MODEL], Generic[MODEL]):
+class BulkUpdateQuery[MODEL: "Model"](UpdateQuery[..., MODEL]):
     __slots__ = ("_batch_size", "_objects", "_queries", "fields")
 
     def __init__(
@@ -2279,7 +2293,7 @@ class BulkUpdateQuery(UpdateQuery[..., MODEL], Generic[MODEL]):
         return ";".join(sql for sql, _ in queries)
 
 
-class BulkCreateQuery(AwaitableQuery, Generic[MODEL]):
+class BulkCreateQuery[MODEL: "Model"](AwaitableQuery):
     __slots__ = (
         "_batch_size",
         "_db",
@@ -2531,7 +2545,7 @@ class UnionCountQuery(AwaitableQuery):
         return next(iter(dict(result[0]).values()))
 
 
-class UnionQuery(_ChooseDBMixin[MODEL], Generic[MODEL]):
+class UnionQuery[MODEL: "Model"](_ChooseDBMixin[MODEL]):
     __slots__ = (
         "_all",
         "_db",
@@ -2664,7 +2678,9 @@ class UnionQuery(_ChooseDBMixin[MODEL], Generic[MODEL]):
         union._offset = self._offset
         return union
 
-    def _parse_orderings(self, orderings: tuple[str | ModelField | Expression, ...]) -> list[tuple[str, Order]]:
+    def _parse_orderings(
+        self, orderings: tuple[str | ModelField | Expression, ...]
+    ) -> list[tuple[str, Order]]:
         new_ordering = []
         for ordering in orderings:
             if not isinstance(ordering, str):

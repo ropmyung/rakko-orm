@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
         ("queries", "Members per guild:"),
         ("relations", "Filtered prefetch: ['Alice']"),
         ("bulk_and_transactions", "Committed guild: Builders"),
+        ("constraints", "Available stock: [{'sku': 'RAKKO-001', 'quantity': 10, 'reserved': 2}]"),
     ],
 )
 def test_sqlite_examples(module: str, expected: str) -> None:

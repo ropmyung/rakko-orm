@@ -27,4 +27,3 @@ def project(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     return tmp_path
-

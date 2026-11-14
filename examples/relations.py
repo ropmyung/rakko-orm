@@ -2,12 +2,12 @@
 
 from examples.models import Guild, Member
 from rakko import run_async
-from rakko.context import TortoiseContext
+from rakko.context import RakkoContext
 from rakko.query_utils import Prefetch
 
 
 async def run() -> None:
-    async with TortoiseContext() as context:
+    async with RakkoContext() as context:
         await context.init(db_url="sqlite://:memory:", modules={"models": ["examples.models"]})
         await context.generate_schemas()
 

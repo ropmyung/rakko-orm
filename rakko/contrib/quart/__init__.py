@@ -104,9 +104,7 @@ def register_tortoise(
         """Populate DB with Tortoise-ORM schemas."""
 
         async def inner() -> None:
-            await Rakko.init(
-                config=config, config_file=config_file, db_url=db_url, modules=modules
-            )
+            await Rakko.init(config=config, config_file=config_file, db_url=db_url, modules=modules)
             await Rakko.generate_schemas()
             await Rakko.close_connections()
 

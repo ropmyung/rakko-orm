@@ -79,7 +79,8 @@ class Index:
         if self.fields:
             columns = [
                 model._meta.fields_map[name].source_field or name
-                if name in model._meta.fields_map else name
+                if name in model._meta.fields_map
+                else name
                 for name in columns
             ]
         return schema_generator._get_index_sql(

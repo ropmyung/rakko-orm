@@ -48,9 +48,13 @@ def transform_model(node: ClassDef, infer_function: Any = None) -> None:
         for mcls in node.get_children():
             if isinstance(mcls, ClassDef):
                 for attr in mcls.get_children():
-                    if (isinstance(attr, Assign) and isinstance(attr.targets[0], nodes.AssignName)
-                        and attr.targets[0].name == "app" and isinstance(attr.value, nodes.Const)
-                        and isinstance(attr.value.value, str)):
+                    if (
+                        isinstance(attr, Assign)
+                        and isinstance(attr.targets[0], nodes.AssignName)
+                        and attr.targets[0].name == "app"
+                        and isinstance(attr.value, nodes.Const)
+                        and isinstance(attr.value.value, str)
+                    ):
                         appname = attr.value.value
 
         mname = f"{appname}.{node.name}"
@@ -61,7 +65,9 @@ def transform_model(node: ClassDef, infer_function: Any = None) -> None:
 
         for attr in node.get_children():
             if isinstance(attr, (Assign, AnnAssign)):
-                if isinstance(attr.value, nodes.Call) and isinstance(attr.value.func, nodes.Attribute):
+                if isinstance(attr.value, nodes.Call) and isinstance(
+                    attr.value.func, nodes.Attribute
+                ):
                     attrname = attr.value.func.attrname
                     if attrname in ["OneToOneField", "ForeignKeyField", "ManyToManyField"]:
                         tomodel = ""
@@ -124,7 +130,14 @@ def transform_model(node: ClassDef, infer_function: Any = None) -> None:
     ]
     if "id" not in node.locals:
         id_nodes: list[InferenceResult] = [
-            nodes.ClassDef("id", node.lineno or 0, node.col_offset or 0, node, end_lineno=None, end_col_offset=None)
+            nodes.ClassDef(
+                "id",
+                node.lineno or 0,
+                node.col_offset or 0,
+                node,
+                end_lineno=None,
+                end_col_offset=None,
+            )
         ]
         node.locals["id"] = id_nodes
 
@@ -137,7 +150,9 @@ def is_model_field(cls: ClassDef) -> bool:
     return bool(cls.is_subtype_of(type_name)) and cls.qname() != type_name
 
 
-def apply_type_shim(node: ClassDef, context: InferenceContext | None = None, **kwargs: Any) -> Iterator[InferenceResult]:
+def apply_type_shim(
+    node: ClassDef, context: InferenceContext | None = None, **kwargs: Any
+) -> Iterator[InferenceResult]:
     """
     Morphs model fields to representative type
     """

@@ -6,7 +6,7 @@ import abc
 import asyncio
 import inspect
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any, Generic, TypeAlias, TypeVar, cast
+from typing import Any, cast
 
 from pypika_tortoise import Query
 
@@ -16,11 +16,9 @@ from rakko.connection import get_connections
 from rakko.exceptions import TransactionManagementError
 from rakko.log import db_client_logger
 
-T_conn = TypeVar("T_conn")  # Instance of client connection, such as: asyncpg.Connection()
-
 #: A callable returning a password, awaited first if it returns an awaitable.
-PasswordFactory: TypeAlias = Callable[[], "str | Awaitable[str]"]
-PasswordType: TypeAlias = "str | PasswordFactory | None"
+type PasswordFactory = Callable[[], str | Awaitable[str]]
+type PasswordType = str | PasswordFactory | None
 
 
 async def resolve_password(password: PasswordType) -> str | None:
@@ -306,7 +304,7 @@ class TransactionalDBClient(BaseDBAsyncClient, abc.ABC):
     async def release_savepoint(self) -> None: ...
 
 
-class ConnectionWrapper(Generic[T_conn]):
+class ConnectionWrapper[T_conn]:
     """Wraps the connections with a lock to facilitate safe concurrent access when using
     asyncio.gather, TaskGroup, or similar."""
 
@@ -408,7 +406,7 @@ class NestedTransactionContext(TransactionContext):
                 await self.client.release_savepoint()
 
 
-class PoolConnectionWrapper(Generic[T_conn]):
+class PoolConnectionWrapper[T_conn]:
     """Class to manage acquiring from and releasing connections to a pool."""
 
     __slots__ = ("client", "connection", "_pool_init_lock")

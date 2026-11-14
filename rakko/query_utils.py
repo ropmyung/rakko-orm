@@ -176,7 +176,9 @@ class Prefetch:
 
     __slots__ = ("relation", "queryset", "to_attr")
 
-    def __init__(self, relation: FieldReference, queryset: QuerySet, to_attr: str | None = None) -> None:
+    def __init__(
+        self, relation: FieldReference, queryset: QuerySet, to_attr: str | None = None
+    ) -> None:
         self.to_attr = to_attr
         self.relation = relation
         self.queryset = queryset

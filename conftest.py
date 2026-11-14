@@ -49,7 +49,7 @@ async def _truncate_all_tables(ctx) -> None:
 @pytest_asyncio.fixture(scope="module")
 async def db_module():
     """
-    Module-scoped fixture: Creates TortoiseContext once per test module.
+    Module-scoped fixture: Creates RakkoContext once per test module.
 
     This is the base fixture that creates the database schema once per module.
     Other fixtures build on top of this for different isolation strategies.

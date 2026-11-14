@@ -14,6 +14,7 @@ in-memory database and closes its connections when it finishes.
     uv run -m examples.queries
     uv run -m examples.relations
     uv run -m examples.bulk_and_transactions
+    uv run -m examples.constraints
 
 .. _example_basic:
 
@@ -66,6 +67,16 @@ instance update mappings. Upserts accept typed model constructor arguments.
 Queries can select the active transaction connection.
 
 .. literalinclude:: ../../examples/bulk_and_transactions.py
+   :language: python
+
+Constraints and indexes
+-----------------------
+
+Declare CHECK constraints, composite uniqueness and indexes with model metadata.
+The example also shows conditional uniqueness for reusing soft-deleted email
+addresses, supported only by PostgreSQL and SQLite.
+
+.. literalinclude:: ../../examples/constraints.py
    :language: python
 
 MySQL SQL preview

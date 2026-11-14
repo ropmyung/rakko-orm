@@ -272,7 +272,7 @@ class TransactionWrapper(MySQLClient, TransactionalDBClient):
     @translate_exceptions
     async def savepoint(self) -> None:
         self._savepoint = _gen_savepoint_name()
-        await self._connection.query(f'SAVEPOINT {self._savepoint}')
+        await self._connection.query(f"SAVEPOINT {self._savepoint}")
 
     async def rollback(self) -> None:
         if self._finalized:
@@ -285,7 +285,7 @@ class TransactionWrapper(MySQLClient, TransactionalDBClient):
             raise TransactionManagementError("Transaction already finalised")
         if self._savepoint is None:
             raise TransactionManagementError("No savepoint to rollback to")
-        await self._connection.query(f'ROLLBACK TO SAVEPOINT {self._savepoint}')
+        await self._connection.query(f"ROLLBACK TO SAVEPOINT {self._savepoint}")
         self._savepoint = None
         self._finalized = True
 
@@ -294,10 +294,10 @@ class TransactionWrapper(MySQLClient, TransactionalDBClient):
             raise TransactionManagementError("Transaction already finalised")
         if self._savepoint is None:
             raise TransactionManagementError("No savepoint to release")
-        await self._connection.query(f'RELEASE SAVEPOINT {self._savepoint}')
+        await self._connection.query(f"RELEASE SAVEPOINT {self._savepoint}")
         self._savepoint = None
         self._finalized = True
 
 
 def _gen_savepoint_name(_c=count()) -> str:
-    return f'rakko_savepoint_{next(_c)}'
+    return f"rakko_savepoint_{next(_c)}"

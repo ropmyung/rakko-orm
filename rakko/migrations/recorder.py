@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from rakko import Field, fields
 from rakko.migrations.graph import MigrationKey
@@ -42,11 +42,7 @@ class MigrationRecorder:
             name: Field[str] = fields.CharField(max_length=255)
             applied_at: Field[datetime] = fields.DatetimeField()
 
-            Meta = {
-                "table": table_name,
-                "app": "_migrations",
-                "unique_together": ((app, name),)
-            }
+            Meta = {"table": table_name, "app": "_migrations", "unique_together": ((app, name),)}
 
         return MigrationRecord
 
@@ -85,7 +81,7 @@ class MigrationRecorder:
         return [MigrationKey(app_label=row["app"], name=row["name"]) for row in rows]
 
     async def record_applied(self, app: str, name: str, *, using_db=None) -> None:
-        applied_at = datetime.now(timezone.utc)
+        applied_at = datetime.now(UTC)
         query = (
             f"INSERT INTO {self._quote(self.table_name)} "  # nosec B608
             f"({self._quote('app')}, {self._quote('name')}, {self._quote('applied_at')}) "

@@ -19,12 +19,8 @@ from pypika_tortoise.terms import Term
 
 from rakko import timezone
 from rakko.exceptions import ConfigurationError, FieldError
-from rakko.fields.base import (
-    Field,
-    FieldKwargs,
-    FieldKwargsNoPk,
-    _FieldKwargsCommon,
-)
+from rakko.fields.base import Field
+from rakko.fields.kwargs import FieldKwargs, FieldKwargsNoPk, _FieldKwargsCommon
 from rakko.timezone import get_default_timezone, get_use_tz
 from rakko.validators import MaxLengthValidator
 
@@ -164,7 +160,7 @@ class IntField[T: (int, int | None)](Field[T], int):
                 TinyIntField: "TinyAutoField",
             }
             if type(self) in auto_fields:
-                path = f'{__name__}.{auto_fields[type(self)]}'
+                path = f"{__name__}.{auto_fields[type(self)]}"
                 kwargs["primary_key"] = self.pk
         kwargs.pop("generated", None)
         if self.unsigned:
@@ -204,7 +200,7 @@ class IntField[T: (int, int | None)](Field[T], int):
             sql_type = self.field.get_for_dialect("mysql", "SQL_TYPE")
             if self.field.unsigned and "UNSIGNED" not in sql_type.upper():
                 sql_type += " UNSIGNED"
-            return f'{sql_type} NOT NULL PRIMARY KEY AUTO_INCREMENT'
+            return f"{sql_type} NOT NULL PRIMARY KEY AUTO_INCREMENT"
 
     class _db_mssql:  # type: ignore
         GENERATED_SQL = "INT IDENTITY(1,1) NOT NULL PRIMARY KEY"
@@ -366,38 +362,42 @@ def _auto[T: IntField[int]](field: T) -> T:
 
     return field
 
+
 def TinyAutoField(
     unsigned: bool = False,
     primary_key: bool = True,
     init: Literal[False] = False,
-    **kwargs: Unpack[FieldKwargsNoPk[int]]
+    **kwargs: Unpack[FieldKwargsNoPk[int]],
 ) -> TinyIntField[int]:
     """Automatically incrementing 8-bit integer primary key."""
     return _auto(TinyIntField(primary_key=primary_key, unsigned=unsigned, **kwargs))
+
 
 def SmallAutoField(
     unsigned: bool = False,
     primary_key: bool = True,
     init: Literal[False] = False,
-    **kwargs: Unpack[FieldKwargsNoPk[int]]
+    **kwargs: Unpack[FieldKwargsNoPk[int]],
 ) -> SmallIntField[int]:
     """Automatically incrementing 16-bit integer primary key."""
     return _auto(SmallIntField(primary_key=primary_key, unsigned=unsigned, **kwargs))
+
 
 def AutoField(
     unsigned: bool = False,
     primary_key: bool = True,
     init: Literal[False] = False,
-    **kwargs: Unpack[FieldKwargsNoPk[int]]
+    **kwargs: Unpack[FieldKwargsNoPk[int]],
 ) -> IntField[int]:
     """Automatically incrementing 32-bit integer primary key."""
     return _auto(IntField(primary_key=primary_key, unsigned=unsigned, **kwargs))
+
 
 def BigAutoField(
     unsigned: bool = False,
     primary_key: bool = True,
     init: Literal[False] = False,
-    **kwargs: Unpack[FieldKwargsNoPk[int]]
+    **kwargs: Unpack[FieldKwargsNoPk[int]],
 ) -> BigIntField[int]:
     """Automatically incrementing 64-bit integer primary key."""
     return _auto(BigIntField(primary_key=primary_key, unsigned=unsigned, **kwargs))
@@ -1214,7 +1214,9 @@ class IntEnumFieldInstance(SmallIntField):
         value = self.enum_type(value) if value is not None else None
         return value
 
-    def to_db_value(self, value: IntEnum | None | int, instance: type[Model] | Model | None) -> int | None:
+    def to_db_value(
+        self, value: IntEnum | None | int, instance: type[Model] | Model | None
+    ) -> int | None:
         if isinstance(value, IntEnum):
             value = int(value.value)
         if isinstance(value, int):
@@ -1223,10 +1225,7 @@ class IntEnumFieldInstance(SmallIntField):
         return value
 
 
-IntEnumType = TypeVar("IntEnumType", bound=IntEnum)
-
-
-def IntEnumField(
+def IntEnumField[IntEnumType: IntEnum](
     enum_type: type[IntEnumType],
     description: str | None = None,
     **kwargs: Any,
@@ -1273,7 +1272,9 @@ class CharEnumFieldInstance(CharField):
     def to_python_value(self, value: str | None) -> Enum | None:
         return self.enum_type(value) if value is not None else None
 
-    def to_db_value(self, value: Enum | None | str, instance: type[Model] | Model | None) -> str | None:
+    def to_db_value(
+        self, value: Enum | None | str, instance: type[Model] | Model | None
+    ) -> str | None:
         self.validate(value)
         if isinstance(value, Enum):
             return str(value.value)
@@ -1282,10 +1283,7 @@ class CharEnumFieldInstance(CharField):
         return value
 
 
-CharEnumType = TypeVar("CharEnumType", bound=Enum)
-
-
-def CharEnumField(
+def CharEnumField[CharEnumType: Enum](
     enum_type: type[CharEnumType],
     description: str | None = None,
     max_length: int = 0,

@@ -15,4 +15,6 @@ class AsyncpgExecutor(BasePostgresExecutor):
     async def _process_insert_result(
         self, instance: Model, results: asyncpg.Record | Mapping[str, Any] | None
     ) -> None:
-        return await super()._process_insert_result(instance, cast(Mapping[str, Any] | None, results))
+        return await super()._process_insert_result(
+            instance, cast(Mapping[str, Any] | None, results)
+        )

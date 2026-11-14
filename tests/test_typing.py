@@ -54,7 +54,8 @@ def test_invalid_query_arguments_are_rejected(tmp_path: Path) -> None:
         "CheckConstraint(check='age >= 0', name='positive')",
         "CheckConstraint(check=True, name='positive')",
         "UniqueConstraint(fields=(Member.age,), condition='age > 0')",
-        "CheckConstraint(check=lambda: Member.age == 'old', name='positive')",
+        "CheckConstraint[Member](check=lambda model: model.age == 'old', name='positive')",
+        "CheckConstraint(check=lambda: Member.age >= 0, name='positive')",
         "Index(fields=(1,))",
     ]
     path = tmp_path / "invalid_queries.py"

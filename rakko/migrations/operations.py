@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import inspect
 from copy import deepcopy
-from typing import TYPE_CHECKING, Any, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from rakko import BaseDBAsyncClient, Model
 from rakko.fields import Field
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from rakko.fields.base import Field as BaseField
     from rakko.fields.relational import ManyToManyRelation
 
-    FieldLike: TypeAlias = BaseField[Any] | ManyToManyRelation[Any] | None
+    type FieldLike = BaseField[Any] | ManyToManyRelation[Any] | None
 else:
     FieldLike = Field
 
@@ -161,7 +161,6 @@ class CreateModel(RakkoOperation):
     @property
     def model(self) -> type[Model]:
         if not self._model:
-
             attributes: dict[str, Any] = dict(self.fields)
             attributes["Meta"] = dict(self.options or {})
             attributes["_no_comments"] = True

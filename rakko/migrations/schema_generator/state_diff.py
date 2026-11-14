@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
+from pypika_tortoise.context import DEFAULT_SQL_CONTEXT
+
 from rakko.fields.relational import (
     ForeignKeyFieldInstance,
     ManyToManyFieldInstance,
@@ -59,6 +61,12 @@ def _normalize_constraints(value: object) -> list[UniqueConstraint | CheckConstr
     if not value or not isinstance(value, Iterable):
         return []
     return [c for c in value if isinstance(c, (UniqueConstraint, CheckConstraint))]
+
+
+def _check_signature(constraint: CheckConstraint) -> str:
+    if callable(constraint.check):
+        raise ValueError("Check constraints must be resolved before comparing migration states")
+    return constraint.check.get_sql(DEFAULT_SQL_CONTEXT)
 
 
 RELATION_FIELDS = (ForeignKeyFieldInstance, OneToOneFieldInstance, ManyToManyFieldInstance)
@@ -261,12 +269,12 @@ class StateModelDiff:
 
         # Rename detection for CheckConstraint (by matching check expression)
         old_by_check: dict[str, CheckConstraint] = {
-            constraint._signature()[1]: constraint
+            _check_signature(constraint): constraint
             for constraint in old_constraints
             if isinstance(constraint, CheckConstraint)
         }
         new_by_check: dict[str, CheckConstraint] = {
-            constraint._signature()[1]: constraint
+            _check_signature(constraint): constraint
             for constraint in new_constraints
             if isinstance(constraint, CheckConstraint)
         }
@@ -320,9 +328,7 @@ class StateFieldDiff:
         self.old_state = old_state
         self.new_state = new_state
 
-    def _generated_field_recreate_ops(
-        self, field_name: str, field: Field
-    ) -> list[RakkoOperation]:
+    def _generated_field_recreate_ops(self, field_name: str, field: Field) -> list[RakkoOperation]:
         operations: list[RakkoOperation] = []
         if getattr(field, "index", False):
             operations.append(

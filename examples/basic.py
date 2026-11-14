@@ -2,9 +2,8 @@
 
 from datetime import datetime as dt
 
-from rakko import Field, MetaOption, Model, fields, run_async
-from rakko.context import TortoiseContext
-from rakko.models import meta
+from rakko import Field, MetaOption, Model, fields, meta, run_async
+from rakko.context import RakkoContext
 
 
 class Event(Model):
@@ -22,7 +21,7 @@ class Event(Model):
 
 
 async def run() -> None:
-    async with TortoiseContext() as context:
+    async with RakkoContext() as context:
         await context.init(db_url="sqlite://:memory:", modules={"models": [__name__]})
         await context.generate_schemas()
 

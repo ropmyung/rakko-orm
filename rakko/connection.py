@@ -36,9 +36,9 @@ class ConnectionToken:
 
 class ConnectionHandler:
     """
-    Connection management for a single TortoiseContext.
+    Connection management for a single RakkoContext.
 
-    Each TortoiseContext owns its own ConnectionHandler instance with isolated storage.
+    Each RakkoContext owns its own ConnectionHandler instance with isolated storage.
     """
 
     def __init__(self) -> None:
@@ -287,7 +287,7 @@ class _ConnectionsProxy:
     Simple delegator that forwards all operations to the current context's ConnectionHandler.
 
     This provides backward compatibility for code using the `connections` module-level singleton.
-    All operations require an active TortoiseContext - if no context is active, a clear error is raised.
+    All operations require an active RakkoContext - if no context is active, a clear error is raised.
 
     .. deprecated::
         Direct use of `connections` is deprecated. Use `get_connection()` or `get_connections()` instead,

@@ -34,6 +34,11 @@ arguments, and raw fields remain metadata rather than SQL operators.
 Regular constructor parameters are optional statically; runtime validation and
 DB constraints govern saves. Automatic IDs remain excluded.
 
-``TortoiseContext``, ``TortoiseConfig`` and some configuration/integration names
-are retained inside ``rakko``. They do not require installing the separate
-``tortoise`` package. Review existing migrations/integrations against the changed API.
+Use ``RakkoContext`` from ``rakko.context`` for explicit context management.
+``TortoiseConfig`` and some configuration/integration names are retained inside
+``rakko``. They do not require installing the separate ``tortoise`` package.
+Review existing migrations/integrations against the changed API.
+
+Since ``1.0.0a3``, constraint callbacks receive the model class. Change
+``lambda: Account.balance >= 0`` to ``lambda model: model.balance >= 0`` for
+both ``CheckConstraint.check`` and ``UniqueConstraint.condition``.

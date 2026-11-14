@@ -1,7 +1,7 @@
 """Preview MySQL SQL without connecting: uv run --extra aiomysql -m examples.mysql_sql"""
 
 from rakko import Field, Model, fields, run_async
-from rakko.context import TortoiseContext
+from rakko.context import RakkoContext
 
 
 class Usage(Model):
@@ -12,7 +12,7 @@ class Usage(Model):
 
 
 async def run() -> None:
-    async with TortoiseContext() as context:
+    async with RakkoContext() as context:
         await context.init(
             db_url="mysql://example:example@127.0.0.1:3306/rakko_examples",
             modules={"models": [__name__]},

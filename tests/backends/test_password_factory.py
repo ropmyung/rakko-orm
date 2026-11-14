@@ -7,7 +7,7 @@ import pytest
 
 from rakko import Rakko
 from rakko.backends.base.client import resolve_password
-from rakko.context import TortoiseContext
+from rakko.context import RakkoContext
 
 
 @pytest.mark.asyncio
@@ -44,7 +44,7 @@ async def test_asyncpg_forwards_password_callable_to_the_driver() -> None:
     with patch(
         "rakko.backends.asyncpg.client.asyncpg.create_pool", new=AsyncMock()
     ) as asyncpg_connect:
-        async with TortoiseContext() as ctx:
+        async with RakkoContext() as ctx:
             await ctx.connections._init(
                 {
                     "models": {
@@ -79,7 +79,7 @@ async def test_psycopg_keeps_the_password_out_of_the_conninfo() -> None:
         "rakko.backends.psycopg.client.PsycopgClient.create_pool", new=AsyncMock()
     ) as patched_create_pool:
         patched_create_pool.return_value = AsyncMock()
-        async with TortoiseContext() as ctx:
+        async with RakkoContext() as ctx:
             await ctx.connections._init(
                 {
                     "models": {
@@ -134,9 +134,7 @@ def test_star_password_ignores_password_callables() -> None:
     def factory() -> str:
         return "s3cret"  # pragma: nocoverage
 
-    config = {
-        "models": {"engine": "rakko.backends.asyncpg", "credentials": {"password": factory}}
-    }
+    config = {"models": {"engine": "rakko.backends.asyncpg", "credentials": {"password": factory}}}
 
     # Must not raise: masking only applies to string passwords
     assert "s3cret" not in Rakko.star_password(config)

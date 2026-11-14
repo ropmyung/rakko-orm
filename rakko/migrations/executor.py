@@ -121,7 +121,8 @@ class MigrationExecutor:
         try:
             async with (
                 in_transaction(self.connection.connection_name)
-                if editor.atomic_migration else nullcontext(self.connection)
+                if editor.atomic_migration
+                else nullcontext(self.connection)
             ) as client:
                 editor.client = client
                 await run(state, dry_run=dry_run, schema_editor=editor)
@@ -130,7 +131,11 @@ class MigrationExecutor:
                     if violations:
                         raise IntegrityError("Migration violates foreign key constraints")
                 if not dry_run:
-                    record = self.recorder.record_unapplied if step.backward else self.recorder.record_applied
+                    record = (
+                        self.recorder.record_unapplied
+                        if step.backward
+                        else self.recorder.record_applied
+                    )
                     await record(step.migration.app_label, step.migration.name, using_db=client)
         finally:
             if foreign_keys:

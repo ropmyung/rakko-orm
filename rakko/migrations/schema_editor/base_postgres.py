@@ -123,7 +123,7 @@ class BasePostgresSchemaEditor(BaseSchemaEditor):
                 f'CREATE UNIQUE INDEX "{index_name}" '
                 f"ON {self._qualify_table_name(model._meta.db_table, model._meta.schema)} "
                 f"({', '.join([self.quote(f) for f in resolved_fields])}) "
-                f'WHERE {constraint.get_condition_sql(model, self.client.query_class.SQL_CONTEXT)}'
+                f"WHERE {constraint.get_condition_sql(model, self.client.query_class.SQL_CONTEXT)}"
             )
             await self._run_sql(index_sql + ";")
             return

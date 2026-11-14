@@ -7,7 +7,7 @@ from abc import ABC
 from collections.abc import Callable
 from functools import wraps
 from types import CoroutineType
-from typing import Any
+from typing import Any, cast
 
 import asyncodbc  # type: ignore[import-not-found]
 import pyodbc  # type: ignore[import-not-found]
@@ -193,21 +193,21 @@ class ODBCTransactionWrapper(TransactionalDBClient):
 
     async def begin(self) -> None:
         self._finalized = False
-        self._connection._conn.autocommit = False
+        cast(pyodbc.Connection, self._connection._conn).autocommit = False
 
     async def commit(self) -> None:
         if self._finalized:
             raise TransactionManagementError("Transaction already finalised")
         await self._connection.commit()
         self._finalized = True
-        self._connection._conn.autocommit = True
+        cast(pyodbc.Connection, self._connection._conn).autocommit = True
 
     async def rollback(self) -> None:
         if self._finalized:
             raise TransactionManagementError("Transaction already finalised")
         await self._connection.rollback()
         self._finalized = True
-        self._connection._conn.autocommit = True
+        cast(pyodbc.Connection, self._connection._conn).autocommit = True
 
     async def savepoint(self) -> None:
         pass

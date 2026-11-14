@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Self
 from rakko import Rakko
 from rakko.config import TortoiseConfig
 from rakko.connection import get_connections
-from rakko.context import TortoiseContext
+from rakko.context import RakkoContext
 from rakko.exceptions import DoesNotExist, IntegrityError
 from rakko.log import logger
 
@@ -135,7 +135,7 @@ class RegisterTortoise(AbstractAsyncContextManager):
         self.timezone = timezone
         self._create_db = _create_db
         self._enable_global_fallback = _enable_global_fallback
-        self._context: TortoiseContext | None = None
+        self._context: RakkoContext | None = None
 
         if add_exception_handlers and app is not None:
             from starlette.middleware.exceptions import ExceptionMiddleware
@@ -155,7 +155,7 @@ class RegisterTortoise(AbstractAsyncContextManager):
 
             ExceptionMiddleware.__call__ = wrap_middleware_call  # type:ignore
 
-    async def init_orm(self) -> TortoiseContext:  # pylint: disable=W0612
+    async def init_orm(self) -> RakkoContext:  # pylint: disable=W0612
         self._context = await Rakko.init(
             config=self.config,
             config_file=self.config_file,

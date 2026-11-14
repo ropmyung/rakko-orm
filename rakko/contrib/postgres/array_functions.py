@@ -1,11 +1,11 @@
 # Modified for Rakko ORM: adapt integration imports and model/query interfaces to the rakko package.
 
-from enum import Enum
+from enum import StrEnum
 
 from pypika_tortoise.terms import BasicCriterion, Criterion, Function, Term
 
 
-class PostgresArrayOperators(str, Enum):
+class PostgresArrayOperators(StrEnum):
     CONTAINS = "@>"
     CONTAINED_BY = "<@"
     OVERLAP = "&&"

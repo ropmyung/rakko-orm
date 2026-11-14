@@ -35,7 +35,7 @@ from unittest import SkipTest, expectedFailure, skip, skipIf, skipUnless
 
 from rakko import Rakko, run_async
 from rakko.connection import get_connection
-from rakko.context import TortoiseContext, tortoise_test_context
+from rakko.context import RakkoContext, tortoise_test_context
 
 if TYPE_CHECKING:
     from rakko.models import Model
@@ -49,7 +49,7 @@ MEMORY_SQLITE = "sqlite://:memory:"
 
 __all__ = (
     "MEMORY_SQLITE",
-    "TortoiseContext",
+    "RakkoContext",
     "tortoise_test_context",
     "requireCapability",
     "truncate_all_models",

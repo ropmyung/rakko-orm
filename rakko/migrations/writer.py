@@ -270,12 +270,12 @@ def _render_term(value: Term, imports: ImportManager) -> str:
                 or type(value).get_sql is not Function.get_sql
                 or value.schema is not None
             ):
-                raise ValueError(f'Cannot serialize SQL function {term_type.__name__}')
+                raise ValueError(f"Cannot serialize SQL function {term_type.__name__}")
             args = [value.name, *value.args] if term_type is Function else list(value.args)
         case _:
-            raise ValueError(f'Cannot serialize SQL expression {type(value).__name__}')
+            raise ValueError(f"Cannot serialize SQL expression {type(value).__name__}")
     imports.add_from(term_type.__module__, term_type.__name__)
-    expression = f'{term_type.__name__}({", ".join(render_value(arg, imports) for arg in args)})'
+    expression = f"{term_type.__name__}({', '.join(render_value(arg, imports) for arg in args)})"
     if isinstance(value, ContainsCriterion) and value._is_negated:
         expression += ".negate()"
     return expression

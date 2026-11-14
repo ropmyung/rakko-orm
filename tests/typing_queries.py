@@ -56,6 +56,6 @@ async def query_types(guild: Guild) -> None:
     await Member.all().select_related(Member.guild).values(Member.name, Guild.name)
 
 
-check_constraint = CheckConstraint(check=lambda: Member.age >= 0, name="positive_age")
-unique_constraint = UniqueConstraint(fields=(Member.name,), condition=lambda: Member.age >= 18)
+check_constraint = CheckConstraint[Member](check=lambda model: model.age >= 0, name="positive_age")
+unique_constraint = UniqueConstraint(fields=(Member.name,), condition=lambda model: model.age >= 18)
 model_index = Index(fields=(Member.age,))

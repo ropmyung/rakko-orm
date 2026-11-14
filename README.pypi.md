@@ -5,7 +5,7 @@
 **Typed queries. Async by nature.**
 
 Rakko ORM is an independent asynchronous Python ORM maintained by **ropmyung**.
-Release **1.0.0-alpha.2** uses the Python package version **1.0.0a2** and requires
+Release **1.0.0-alpha.3** uses the Python package version **1.0.0a3** and requires
 Python **3.12 or newer**. Its name means sea otter (해달).
 
 Rakko began as a fork of [Tortoise ORM](https://github.com/tortoise/tortoise-orm).
@@ -16,7 +16,7 @@ model metadata and query composition. It is developed as a separate project.
 import asyncio
 
 from rakko import Field, Model, fields
-from rakko.context import TortoiseContext
+from rakko.context import RakkoContext
 
 
 class User(Model):
@@ -26,7 +26,7 @@ class User(Model):
 
 
 async def main() -> None:
-    async with TortoiseContext() as context:
+    async with RakkoContext() as context:
         await context.init(db_url="sqlite://:memory:", modules={"models": [__name__]})
         await context.generate_schemas()
         user = await User.create(name="Ada", age=20)

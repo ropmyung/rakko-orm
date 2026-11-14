@@ -32,7 +32,7 @@ from rakko.timezone import _reset_timezone_cache
 from rakko.utils import generate_schema_for_client
 
 if TYPE_CHECKING:
-    from rakko.context import TortoiseContext
+    from rakko.context import RakkoContext
 
 
 class classproperty:
@@ -66,7 +66,7 @@ class _RakkoMeta(type):
         if name in cls.__dict__ and isinstance(cls.__dict__[name], classproperty):
             raise AttributeError(
                 f"Cannot assign to Rakko.{name} — it is a classproperty that resolves "
-                f"from the current TortoiseContext. Modify the context directly instead "
+                f"from the current RakkoContext. Modify the context directly instead "
                 f"(e.g. ctx._apps = None)."
             )
         super().__setattr__(name, value)
@@ -77,30 +77,30 @@ class Rakko(metaclass=_RakkoMeta):
     Rakko ORM main interface.
 
     Provides static methods for initialization and access to ORM state.
-    All state is managed by TortoiseContext instances.
+    All state is managed by RakkoContext instances.
 
     NOTE: No class-level state except table_name_generator for backward compat.
-    All runtime state lives in TortoiseContext.
+    All runtime state lives in RakkoContext.
     """
 
-    # Class-level for backward compatibility; also stored in TortoiseContext
+    # Class-level for backward compatibility; also stored in RakkoContext
     table_name_generator: Callable[[type[Model]], str] | None = None
 
     @classmethod
-    def _get_context(cls) -> TortoiseContext | None:
+    def _get_context(cls) -> RakkoContext | None:
         """Get the current context from context var."""
         from rakko.context import get_current_context
 
         return get_current_context()
 
     @classmethod
-    def _require_context(cls) -> TortoiseContext:
+    def _require_context(cls) -> RakkoContext:
         """Get the current context, raising if none exists."""
         ctx = cls._get_context()
         if ctx is None:
             raise ConfigurationError(
                 "Rakko ORM is not initialized. Call Rakko.init() first "
-                "or use 'async with TortoiseContext()' for explicit context management."
+                "or use 'async with RakkoContext()' for explicit context management."
             )
         return ctx
 
@@ -246,12 +246,12 @@ class Rakko(metaclass=_RakkoMeta):
         :param model_paths: Models paths to initialize
         :param _init_relations: Whether to init relations or not
         """
-        from rakko.context import TortoiseContext, get_current_context
+        from rakko.context import RakkoContext, get_current_context
 
         # Get or create context
         ctx = get_current_context()
         if ctx is None:
-            ctx = TortoiseContext()
+            ctx = RakkoContext()
             ctx.__enter__()
 
         # Create Apps if not exists
@@ -292,7 +292,7 @@ class Rakko(metaclass=_RakkoMeta):
         table_name_generator: Callable[[type[Model]], str] | None = None,
         init_connections: bool = True,
         _enable_global_fallback: bool = False,
-    ) -> TortoiseContext:
+    ) -> RakkoContext:
         """
         Sets up Rakko-ORM: loads apps and models, configures database connections but does not
         connect to the database yet. The actual connection or connection pool is established
@@ -367,10 +367,10 @@ class Rakko(metaclass=_RakkoMeta):
 
         :raises ConfigurationError: For any configuration error
 
-        :returns: The TortoiseContext that was initialized. For multiple asyncio.run()
+        :returns: The RakkoContext that was initialized. For multiple asyncio.run()
             calls, capture this and use 'with ctx:' to maintain context.
         """
-        from rakko.context import TortoiseContext, _current_context
+        from rakko.context import RakkoContext, _current_context
 
         # Get or create context - only use contextvar, not global fallback.
         # Global fallback is for reading (queries), not for initialization.
@@ -378,7 +378,7 @@ class Rakko(metaclass=_RakkoMeta):
         # has global fallback enabled.
         ctx = _current_context.get()
         if ctx is None:
-            ctx = TortoiseContext()
+            ctx = RakkoContext()
             ctx.__enter__()
         elif ctx.inited:
             # Re-initializing existing context
@@ -591,7 +591,7 @@ def run_async(coro: Coroutine, *, verbose: bool = False) -> None:
 
 Rakko = Rakko
 
-__version__ = "1.0.0a2"
+__version__ = "1.0.0a3"
 
 __all__ = [
     "Criterion",

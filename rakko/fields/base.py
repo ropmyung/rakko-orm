@@ -8,7 +8,7 @@ import warnings
 from collections.abc import Awaitable, Callable
 from enum import Enum, StrEnum
 from functools import reduce
-from typing import TYPE_CHECKING, Any, Generic, Self, TypedDict, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, Self, overload
 
 from pypika_tortoise.terms import Term
 
@@ -19,8 +19,6 @@ from rakko.validators import Validator
 if TYPE_CHECKING:  # pragma: nocoverage
     from rakko.expressions import Query
     from rakko.models import Model
-
-VALUE = TypeVar("VALUE")
 
 
 class _DB_DEFAULT_NOT_SET:
@@ -83,84 +81,6 @@ SET_DEFAULT = OnDelete.SET_DEFAULT
 NO_ACTION = OnDelete.NO_ACTION
 
 
-class _FieldKwargsCommon(TypedDict, Generic[VALUE], total=False):
-    """:class:`Field` constructor arguments that are never declared as explicit parameters.
-
-    Used with :data:`typing.Unpack` to give ``**kwargs`` explicit type hints. This is the
-    smallest set; fields that declare ``unique``/``db_index``/``primary_key`` explicitly
-    (e.g. ``TextField``) unpack this directly to avoid PEP 692 parameter-name collisions.
-    """
-
-    source_field: str | None
-    default: VALUE | Callable[..., VALUE | Awaitable[VALUE]] | None
-    db_default: VALUE | SqlDefault | _DB_DEFAULT_NOT_SET
-    description: str | None
-    model: Model | None
-    validators: list[Validator | Callable]
-    pk: bool  # deprecated alias for primary_key
-    index: bool  # deprecated alias for db_index
-
-
-class FieldKwargsNoPk(_FieldKwargsCommon[VALUE], total=False):
-    """Common arguments excluding ``primary_key`` and ``null``.
-
-    For constructors that declare ``primary_key`` and ``null`` as explicit parameters
-    (e.g. ``IntField``).
-    """
-
-    unique: bool
-    db_index: bool | None
-
-
-class FieldKwargs(FieldKwargsNoPk[VALUE], total=False):
-    """Common arguments excluding ``null``.
-
-    For constructors that declare only ``null`` as an explicit parameter (the majority).
-    """
-
-    primary_key: bool | None
-
-
-class TextFieldKwargs(_FieldKwargsCommon[VALUE], total=False):
-    """Constructor arguments for :class:`TextField`.
-
-    ``TextField`` doesn't declare ``null`` explicitly, so it includes it here.
-    """
-
-    null: bool
-
-
-class JSONFieldKwargs(FieldKwargs[VALUE], total=False):
-    """Constructor arguments for :class:`JSONField`.
-
-    ``JSONField`` declares neither ``null`` nor ``primary_key`` explicitly, and also accepts
-    a custom ``field_type`` (e.g. a Pydantic model class).
-    """
-
-    null: bool
-    field_type: type[Any]
-
-
-class RelationalFieldKwargs(FieldKwargs[VALUE], total=False):
-    """Constructor arguments for :func:`ForeignKeyField` and :func:`OneToOneField`.
-
-    Extends the common :class:`~tortoise.fields.base.FieldKwargs` with ``to_field``.
-    ``null`` is declared as an explicit parameter on those constructors, so it is omitted.
-    """
-
-    to_field: str | None
-
-
-class ManyToManyFieldKwargs(_FieldKwargsCommon[VALUE], total=False):
-    """Constructor arguments for :func:`ManyToManyField`.
-
-    ``unique`` is declared as an explicit parameter, so it is omitted here; the deprecated
-    ``create_unique_index`` alias is still accepted.
-    """
-
-    create_unique_index: bool  # deprecated alias for unique
-
-
 class _FieldMeta(type):
     # TODO: Require functions to return field instances instead of this hack
     def __new__(mcs, name: str, bases: tuple[type, ...], attrs: dict) -> type:
@@ -179,7 +99,7 @@ class _FieldMeta(type):
         return type.__new__(mcs, name, bases, attrs)
 
 
-class Field(Generic[VALUE], metaclass=_FieldMeta):
+class Field[VALUE](metaclass=_FieldMeta):
     """
     Base Field type.
 
@@ -289,7 +209,9 @@ class Field(Generic[VALUE], metaclass=_FieldMeta):
         @overload
         def __get__(self, instance: Model, owner: type[Model]) -> VALUE: ...
 
-        def __get__[M: Model](self, instance: M | None, owner: type[M]) -> Query[M, VALUE] | VALUE: ...
+        def __get__[M: Model](
+            self, instance: M | None, owner: type[M]
+        ) -> Query[M, VALUE] | VALUE: ...
 
         def __set__(self, instance: Model, value: VALUE) -> None: ...
 
@@ -371,7 +293,7 @@ class Field(Generic[VALUE], metaclass=_FieldMeta):
         result = cls.__new__(cls)
 
         if not isinstance(result.__dict__, dict):
-            raise TypeError(f'{cls.__name__}.__dict__ is not a dict, cannot copy')
+            raise TypeError(f"{cls.__name__}.__dict__ is not a dict, cannot copy")
 
         result.__dict__.update(self.__dict__)
         result.validators = list(self.validators)

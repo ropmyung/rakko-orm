@@ -1,6 +1,7 @@
 # Modified for Rakko ORM: integrate migration components with Rakko models, imports and operation
 # names.
 
+
 class RakkoMigrationError(Exception):
     """Base migration error."""
 

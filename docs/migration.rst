@@ -55,8 +55,8 @@ Expression constraints
 ----------------------
 
 Conditions accept PyPika criteria, including Rakko's typed comparisons. SQL
-strings and Python booleans are rejected. Within a model declaration, a zero-argument
-callable defers access to class descriptors until the model has been constructed:
+strings and Python booleans are rejected. Within a model declaration, a callback
+receives the model class after its field descriptors have been constructed:
 
 .. code-block:: python
 
@@ -74,7 +74,7 @@ callable defers access to class descriptors until the model has been constructed
             table="accounts",
             constraints=[
                 CheckConstraint(
-                    check=lambda: Account.balance >= 0,
+                    check=lambda model: model.balance >= 0,
                     name="nonnegative_balance",
                 ),
                 UniqueConstraint(fields=(label,), name="unique_label"),
@@ -83,13 +83,18 @@ callable defers access to class descriptors until the model has been constructed
         )
 
 ``@meta class Meta(MetaOption)`` is also supported. In that nested class, use
-``lambda: Account.balance >= 0`` for the condition: the outer model class does
+``lambda model: model.balance >= 0`` for the condition: the outer model class does
 not exist yet while its body executes. Fields in ``UniqueConstraint`` and
 ``Index(fields=...)`` can be field references. Serialized migration snapshots
 use historical names and native PyPika nodes, without importing live models.
 Column aliases are resolved from existing field metadata.
 
-Conditional unique constraints take ``condition=lambda: Account.balance > 0``.
+With ``Meta = MetaOption(...)``, ``@Meta.check_constraint`` can register a
+callback taking the model class. The function name becomes the constraint name.
+Callable checks must be resolved with ``constraint.resolve(model)`` before
+serialization; migration snapshots perform this step automatically.
+
+Conditional unique constraints take ``condition=lambda model: model.balance > 0``.
 They are supported by PostgreSQL and SQLite; MySQL reports them as unsupported.
 Conditions cannot traverse joins. Snapshot expression serialization supports
 comparisons, boolean combinations, arithmetic, ranges, membership, NULL checks

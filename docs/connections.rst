@@ -3,13 +3,12 @@
 Connections and contexts
 ========================
 
-``rakko.context.TortoiseContext`` owns configuration, model registration and
-connection cleanup. It retains an implementation name from the original
-codebase while being provided by the independent ``rakko`` package.
+``rakko.context.RakkoContext`` owns configuration, model registration and
+connection cleanup for an isolated execution context.
 
 .. code-block:: python
 
-    async with TortoiseContext() as context:
+    async with RakkoContext() as context:
         await context.init(
             db_url="sqlite://:memory:", modules={"models": ["examples.models"]}
         )

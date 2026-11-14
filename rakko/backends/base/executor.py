@@ -209,7 +209,8 @@ class BaseExecutor:
         builder = self.db.query_class.into(self.model._meta.basetable)
         query = (
             builder.columns(*columns).insert(*[self.parameter(i) for i in range(len(columns))])
-            if columns else builder.default_values()
+            if columns
+            else builder.default_values()
         )
         if ignore_conflicts:
             query = query.on_conflict().do_nothing()

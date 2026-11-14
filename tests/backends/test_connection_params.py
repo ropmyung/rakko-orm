@@ -12,16 +12,14 @@ except ImportError:
     import aiomysql as mysql
 
 from rakko import timezone
-from rakko.context import TortoiseContext
+from rakko.context import RakkoContext
 
 
 @pytest.mark.asyncio
 async def test_mysql_connection_params():
-    with patch(
-        "rakko.backends.mysql.client.mysql.create_pool", new=AsyncMock()
-    ) as mysql_connect:
+    with patch("rakko.backends.mysql.client.mysql.create_pool", new=AsyncMock()) as mysql_connect:
         mysql_connect.return_value.close = MagicMock()
-        ctx = TortoiseContext()
+        ctx = RakkoContext()
         async with ctx:
             await ctx.connections._init(
                 {
@@ -63,7 +61,7 @@ async def test_asyncpg_connection_params():
         with patch(
             "rakko.backends.asyncpg.client.asyncpg.create_pool", new=AsyncMock()
         ) as asyncpg_connect:
-            ctx = TortoiseContext()
+            ctx = RakkoContext()
             async with ctx:
                 await ctx.connections._init(
                     {
@@ -111,7 +109,7 @@ async def test_psycopg_connection_params():
         ) as patched_create_pool:
             mocked_pool = AsyncMock()
             patched_create_pool.return_value = mocked_pool
-            ctx = TortoiseContext()
+            ctx = RakkoContext()
             async with ctx:
                 await ctx.connections._init(
                     {
@@ -157,7 +155,7 @@ async def test_psycopg_pool_checks_connection_health_on_checkout():
             "rakko.backends.psycopg.client.PsycopgClient.create_pool", new=AsyncMock()
         ) as patched_create_pool:
             patched_create_pool.return_value = AsyncMock()
-            ctx = TortoiseContext()
+            ctx = RakkoContext()
             async with ctx:
                 await ctx.connections._init(
                     {
@@ -179,7 +177,7 @@ async def test_psycopg_pool_checks_connection_health_on_checkout():
 
                 patched_create_pool.assert_awaited_once()
                 assert (
-                    patched_create_pool.await_args.kwargs["check"] # type: ignore
+                    patched_create_pool.await_args.kwargs["check"]  # type: ignore
                     is AsyncConnectionPool.check_connection
                 )
     except ImportError:
@@ -217,7 +215,7 @@ async def test_mysql_session_timezone_uses_configured_tz():
             "rakko.backends.mysql.client.mysql.create_pool",
             new=AsyncMock(return_value=mock_pool),
         ):
-            ctx = TortoiseContext()
+            ctx = RakkoContext()
             async with ctx:
                 await ctx.connections._init(
                     {

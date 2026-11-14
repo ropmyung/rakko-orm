@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, cast, overload
 
 from pypika_tortoise.queries import QueryBuilder
 from pypika_tortoise.terms import Parameterizer
@@ -36,11 +36,9 @@ try:
 except Exception:  # pragma: nocoverage
     _PsycopgClient = None
 
-SchemaT = TypeVar("SchemaT")
-
 
 @dataclass(frozen=True)
-class QueryResult(Generic[SchemaT]):
+class QueryResult[SchemaT]:
     rows: list[SchemaT]
     rows_affected: int
     """
@@ -64,7 +62,7 @@ async def execute_pypika(
 
 
 @overload
-async def execute_pypika(
+async def execute_pypika[SchemaT](
     query: QueryBuilder,
     *,
     using_db: BaseDBAsyncClient | None = None,
@@ -73,7 +71,7 @@ async def execute_pypika(
 
 
 @overload
-async def execute_pypika(
+async def execute_pypika[SchemaT](
     query: QueryBuilder,
     *,
     using_db: BaseDBAsyncClient | None = None,
@@ -81,7 +79,7 @@ async def execute_pypika(
 ) -> QueryResult[SchemaT]: ...
 
 
-async def execute_pypika(
+async def execute_pypika[SchemaT](
     query: QueryBuilder,
     *,
     using_db: BaseDBAsyncClient | None = None,
@@ -115,7 +113,7 @@ def _get_sql_context(db: BaseDBAsyncClient):
     return ctx
 
 
-def _validate_rows(rows: list[dict], schema: type[SchemaT] | Any) -> list[SchemaT]:
+def _validate_rows[SchemaT](rows: list[dict], schema: type[SchemaT] | Any) -> list[SchemaT]:
     if not _PYDANTIC_AVAILABLE:
         return cast(list[SchemaT], rows)
 

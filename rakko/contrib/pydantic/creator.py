@@ -9,7 +9,7 @@ from collections.abc import Iterator, MutableMapping
 from copy import copy
 from enum import Enum, IntEnum
 from hashlib import sha3_224
-from typing import TYPE_CHECKING, Any, TypeAlias, cast, get_args, get_origin
+from typing import TYPE_CHECKING, Any, cast, get_args, get_origin
 
 from pydantic import ConfigDict, computed_field, create_model
 from pydantic import Field as PydanticField
@@ -37,11 +37,11 @@ if TYPE_CHECKING:  # pragma: nocoverage
     from rakko.models import Model
 
 # Type alias for a single entry in the recursion stack: (model_class, field_name, max_recursion)
-StackEntry: TypeAlias = tuple["type[Model]", str, int]
+type StackEntry = tuple["type[Model]", str, int]
 
 # Type alias for property values stored in _properties.
 # Regular fields are stored as (type, FieldInfo) tuples; computed fields as decorator instances.
-PropertyValue: TypeAlias = "tuple[type, Any] | Any"
+type PropertyValue = tuple[type, Any] | Any
 
 _MODEL_INDEX: dict[str, type[PydanticModel]] = {}
 """
@@ -182,7 +182,9 @@ def pydantic_queryset_creator(
         root=(list[submodel], PydanticField(default_factory=list)),  # type: ignore
     )
     model.__doc__ = _cleandoc(cls)
-    model.model_config["title"] = name or f'{submodel.model_config.get("title", submodel.__name__)}_list'
+    model.model_config["title"] = (
+        name or f"{submodel.model_config.get('title', submodel.__name__)}_list"
+    )
     model.model_config["submodel"] = submodel  # type: ignore
     return model
 

@@ -129,7 +129,7 @@ class SqliteSchemaEditor(SqliteQuotingMixin, BaseSchemaEditor):
             unique_field = field.unique and not field.pk
 
         if field.has_db_default():
-            field_definition += f' DEFAULT {self._get_db_default_sql(field, model)}'
+            field_definition += f" DEFAULT {self._get_db_default_sql(field, model)}"
 
         await self._run_sql(
             self.ADD_FIELD_TEMPLATE.format(table=qualified_table, definition=field_definition)
@@ -189,7 +189,9 @@ class SqliteSchemaEditor(SqliteQuotingMixin, BaseSchemaEditor):
         )
 
     async def rename_constraint(self, model, old_constraint, new_constraint) -> None:
-        if not isinstance(old_constraint, UniqueConstraint) or not isinstance(new_constraint, UniqueConstraint):
+        if not isinstance(old_constraint, UniqueConstraint) or not isinstance(
+            new_constraint, UniqueConstraint
+        ):
             await self._remake_table(model)
             return
         old_resolved = self._resolve_fields_to_columns(model, old_constraint.fields)
@@ -376,7 +378,7 @@ class SqliteSchemaEditor(SqliteQuotingMixin, BaseSchemaEditor):
                 )
 
             if actual_field.has_db_default():
-                field_def += f' DEFAULT {self._get_db_default_sql(actual_field, model)}'
+                field_def += f" DEFAULT {self._get_db_default_sql(actual_field, model)}"
 
             field_definitions.append(field_def)
 
@@ -400,10 +402,11 @@ class SqliteSchemaEditor(SqliteQuotingMixin, BaseSchemaEditor):
 
         await self._run_sql(f"DROP TABLE {qualified_old}")
         await self._run_sql(f"ALTER TABLE {qualified_new} RENAME TO {qualified_old}")
-        indexed_fields = [name for name, field in fields_by_db_column.items() if field.index and not field.pk]
+        indexed_fields = [
+            name for name, field in fields_by_db_column.items() if field.index and not field.pk
+        ]
         for statement in self._get_model_index_sqls(model, indexed_fields):
             await self._run_sql(statement)
-
 
     @staticmethod
     def _default_to_sql_literal(value) -> str:

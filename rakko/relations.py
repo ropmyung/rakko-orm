@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, cast, get_type_hints, overload
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, cast, get_type_hints, overload
 
 from rakko.exceptions import ConfigurationError
 from rakko.fields.relational import BackwardFKRelation, ForeignKeyFieldInstance, ReverseRelation
@@ -35,7 +36,7 @@ class reverse_relation[T: Model]:
         self.name = function.__name__
 
     def __set__(self, instance: Model, value: Any) -> None:
-        raise AttributeError(f'Reverse relation {self.name!r} is read-only')
+        raise AttributeError(f"Reverse relation {self.name!r} is read-only")
 
     @overload
     def __get__(self, instance: None, owner: type | None = None) -> reverse_relation[T]: ...
@@ -49,7 +50,7 @@ class reverse_relation[T: Model]:
         if instance is None:
             return self
         owner = cast(type, type(instance))
-        cache_name = f'_{self.name}'
+        cache_name = f"_{self.name}"
         relation = instance.__dict__.get(cache_name)
         if relation is not None:
             return relation
@@ -70,7 +71,7 @@ class reverse_relation[T: Model]:
             ]
             if len(candidates) != 1:
                 raise ConfigurationError(
-                    f'Cannot unambiguously resolve reverse relation {owner.__name__}.{self.name}'
+                    f"Cannot unambiguously resolve reverse relation {owner.__name__}.{self.name}"
                 )
             fk = candidates[0]
             relation = ReverseRelation(

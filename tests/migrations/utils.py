@@ -11,8 +11,7 @@ def cli(project: Path, *args: str) -> str:
     if os.getenv("RAKKO_TEST_MYSQL_DRIVER") == "aiomysql":
         entrypoint = "import sys; sys.modules['asyncmy'] = None; " + entrypoint
     result = subprocess.run(
-        [sys.executable, "-B", "-c", entrypoint,
-         "-c", "settings.RAKKO_ORM", *args],
+        [sys.executable, "-B", "-c", entrypoint, "-c", "settings.RAKKO_ORM", *args],
         cwd=project,
         env={**os.environ, "PYTHONPATH": os.pathsep.join([str(project), str(ROOT)])},
         capture_output=True,
@@ -23,7 +22,6 @@ def cli(project: Path, *args: str) -> str:
     )
     assert result.returncode == 0, result.stdout + result.stderr
     return result.stdout
-
 
 
 def run_model_code(project: Path, statements: str) -> None:
@@ -43,9 +41,13 @@ def run_model_code(project: Path, statements: str) -> None:
     if os.getenv("RAKKO_TEST_MYSQL_DRIVER") == "aiomysql":
         code = "import sys\nsys.modules['asyncmy'] = None\n" + code
     result = subprocess.run(
-        [sys.executable, "-B", "-c", code], cwd=project,
+        [sys.executable, "-B", "-c", code],
+        cwd=project,
         env={**os.environ, "PYTHONPATH": os.pathsep.join([str(project), str(ROOT)])},
-        capture_output=True, text=True, encoding="utf-8", timeout=30, check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+        check=False,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-

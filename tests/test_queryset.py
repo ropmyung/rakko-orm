@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator
 import pytest
 import pytest_asyncio
 
-from rakko.context import TortoiseContext, tortoise_test_context
+from rakko.context import RakkoContext, tortoise_test_context
 from rakko.exceptions import FieldError, ValidationError
 from rakko.functions import Count
 from rakko.query_utils import Prefetch
@@ -14,13 +14,13 @@ from tests.testmodels import DualGuild, Guild, Member, PositionalRecord, Unrelat
 
 
 @pytest_asyncio.fixture
-async def query_db() -> AsyncIterator[TortoiseContext]:
+async def query_db() -> AsyncIterator[RakkoContext]:
     async with tortoise_test_context(["tests.testmodels"]) as context:
         yield context
 
 
 @pytest_asyncio.fixture
-async def members(query_db: TortoiseContext) -> tuple[Member, Member]:
+async def members(query_db: RakkoContext) -> tuple[Member, Member]:
     guild = await Guild.create(name="Guild")
     alice = await Member.create(name="Alice", age=20, guild=guild)
     bob = await Member.create(name="Bob", age=30, guild=guild)
@@ -28,7 +28,7 @@ async def members(query_db: TortoiseContext) -> tuple[Member, Member]:
 
 
 @pytest.mark.asyncio
-async def test_create_is_lazy_and_nullable_fields_can_be_omitted(query_db: TortoiseContext) -> None:
+async def test_create_is_lazy_and_nullable_fields_can_be_omitted(query_db: RakkoContext) -> None:
     guild = await Guild.create(name="Guild")
     query = Member.create(name="Alice", guild=guild)
     assert isinstance(query, CreateQuery)
@@ -131,7 +131,7 @@ async def test_in_bulk_bulk_update_and_partial_update(members: tuple[Member, Mem
 
 
 @pytest.mark.asyncio
-async def test_bulk_conflict_fields_use_database_column_names(query_db: TortoiseContext) -> None:
+async def test_bulk_conflict_fields_use_database_column_names(query_db: RakkoContext) -> None:
     await Guild.create(name="Guild")
     await Guild.bulk_create(
         [Guild(name="Guild")], update_fields=[Guild.name], on_conflict=[Guild.name]
@@ -152,7 +152,7 @@ async def test_union_ordering_accepts_fields(members: tuple[Member, Member]) -> 
 
 
 @pytest.mark.asyncio
-async def test_invalid_and_ambiguous_field_references_fail(query_db: TortoiseContext) -> None:
+async def test_invalid_and_ambiguous_field_references_fail(query_db: RakkoContext) -> None:
     with pytest.raises(FieldError, match="unambiguously"):
         Member.all().values(Unrelated.name)
     with pytest.raises(FieldError, match="unambiguously"):
@@ -189,7 +189,7 @@ async def test_select_only_related_fields(members: tuple[Member, Member]) -> Non
 
 
 @pytest.mark.asyncio
-async def test_create_query_uses_transaction_connection(query_db: TortoiseContext) -> None:
+async def test_create_query_uses_transaction_connection(query_db: RakkoContext) -> None:
     with pytest.raises(RuntimeError, match="rollback"):
         async with in_transaction() as connection:
             await Guild.create(name="Temporary").using_db(connection)
@@ -222,7 +222,7 @@ async def test_named_projection_expressions_do_not_change_parent_query(
 
 
 @pytest.mark.asyncio
-async def test_upsert_parameters_and_instance_field_mappings(query_db: TortoiseContext) -> None:
+async def test_upsert_parameters_and_instance_field_mappings(query_db: RakkoContext) -> None:
     guild, created = await Guild.get_or_create(Guild.name == "Guild", name="Guild")
     assert created
     same, created = await Guild.get_or_create(Guild.name == "Guild", name="Unused")
@@ -248,7 +248,7 @@ async def test_upsert_preserves_omitted_values(members: tuple[Member, Member]) -
 
 
 @pytest.mark.asyncio
-async def test_upsert_accepts_positional_constructor_arguments(query_db: TortoiseContext) -> None:
+async def test_upsert_accepts_positional_constructor_arguments(query_db: RakkoContext) -> None:
     record, created = await PositionalRecord.get_or_create(
         PositionalRecord.name == "Record", None, "Record", age=42
     )
@@ -264,7 +264,7 @@ async def test_upsert_accepts_positional_constructor_arguments(query_db: Tortois
 
 
 @pytest.mark.asyncio
-async def test_upsert_uses_supplied_transaction(query_db: TortoiseContext) -> None:
+async def test_upsert_uses_supplied_transaction(query_db: RakkoContext) -> None:
     with pytest.raises(RuntimeError, match="rollback"):
         async with in_transaction() as connection:
             await Guild.get_or_create(Guild.name == "New", connection, name="New")
@@ -276,7 +276,7 @@ async def test_upsert_uses_supplied_transaction(query_db: TortoiseContext) -> No
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method_name", ["get_or_create", "update_or_create"])
 async def test_concurrent_upsert_reuses_unique_record(
-    query_db: TortoiseContext, method_name: str
+    query_db: RakkoContext, method_name: str
 ) -> None:
     operation = getattr(Guild, method_name)
     results = await asyncio.gather(
@@ -290,7 +290,7 @@ async def test_concurrent_upsert_reuses_unique_record(
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method_name", ["get_or_create", "update_or_create"])
 async def test_upsert_does_not_infer_creation_values_from_criterion(
-    query_db: TortoiseContext, method_name: str
+    query_db: RakkoContext, method_name: str
 ) -> None:
     with pytest.raises(ValidationError):
         await getattr(Guild, method_name)(Guild.name == "Not inferred")
@@ -310,7 +310,7 @@ def test_raw_fields_are_not_sql_expressions() -> None:
 
 @pytest.mark.asyncio
 async def test_mysql_sql_uses_field_references(
-    query_db: TortoiseContext, monkeypatch: pytest.MonkeyPatch
+    query_db: RakkoContext, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from pypika_tortoise import MySQLQuery
 
@@ -343,7 +343,7 @@ async def test_mysql_sql_uses_field_references(
 
 @pytest.mark.asyncio
 async def test_lock_targets_accept_models(
-    query_db: TortoiseContext, monkeypatch: pytest.MonkeyPatch
+    query_db: RakkoContext, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     from pypika_tortoise import PostgreSQLQuery
 

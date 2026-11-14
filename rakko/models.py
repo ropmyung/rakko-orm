@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import re
-from collections.abc import Awaitable, Callable, Generator, Iterable, Iterator, Mapping
+from collections.abc import Awaitable, Callable, Generator, Iterable, Iterator, Mapping, Sequence
 from copy import copy, deepcopy
 from functools import partial
 from typing import (
@@ -96,7 +96,9 @@ def _resolve_together_fields(value: Any) -> Any:
         return tuple(map(_resolve_together_fields, value))
     if isinstance(value, list):
         return list(map(_resolve_together_fields, value))
-    if isinstance(value, Index) and any(isinstance(field, (Field, FieldQuery)) for field in value.fields):
+    if isinstance(value, Index) and any(
+        isinstance(field, (Field, FieldQuery)) for field in value.fields
+    ):
         index = copy(value)
         index.fields = _resolve_together_fields(value.fields)
         return index
@@ -106,7 +108,11 @@ def _resolve_together_fields(value: Any) -> Any:
 def get_together(meta: dict[str, Any], together: str) -> Any:
     """Resolve field references while leaving validation to the model checks."""
     value = meta.get(together, ())
-    if isinstance(value, (list, tuple)) and value and isinstance(value[0], (Field, FieldQuery, str)):
+    if (
+        isinstance(value, (list, tuple))
+        and value
+        and isinstance(value[0], (Field, FieldQuery, str))
+    ):
         value = (tuple(value),)
     return _resolve_together_fields(value)
 
@@ -609,7 +615,7 @@ class ModelMeta(type):
         new_class = super().__new__(cls, name, bases, attrs)
 
         if TYPE_CHECKING and not issubclass(new_class, Model):
-            raise TypeError(f'ModelMeta can only be used with Model subclasses, not {new_class}')
+            raise TypeError(f"ModelMeta can only be used with Model subclasses, not {new_class}")
 
         if meta.auto_table:
             meta.db_table = table_name_generator(cast("type[Model]", new_class))
@@ -822,6 +828,7 @@ class MetaOption(dict[str, Any]):
                 table="custom_table"
                 unique_together=(("field_a", "field_b"), )
     """
+
     __slots__ = ()
 
     def __getattr__(self, name: str) -> Any | None:
@@ -833,20 +840,58 @@ class MetaOption(dict[str, Any]):
     abstract: bool
     schema: str
     table: str
-    table_description: str 
+    table_description: str
     unique_together: Iterable[Field | Iterable[Field]]
     indexes: Iterable[Field | Iterable[Field] | Index]
     constraints: list[CheckConstraint | UniqueConstraint]
-    ordering: list[Field | FieldQuery]
+    ordering: Sequence[Field | FieldQuery]
     fetch_db_defaults: bool
     manager: Manager
     app: Any
-    
+
+    def check_constraint[M: Model](
+        self, callback: Callable[[type[M]], Criterion[M]] | classmethod[M, [], Criterion[M]]
+    ) -> CheckConstraint[M]:
+        from rakko.migrations.constraints import CheckConstraint
+
+        if isinstance(callback, classmethod):
+            callback = callback.__func__
+        constraint = CheckConstraint(callback, callback.__name__)
+
+        if self.get("constraints") is None:
+            self.constraints = []
+
+        self.constraints.append(constraint)
+
+        return constraint
+
+    def unique_constraint(self, *fields: FieldReference):
+        """Register conditional uniqueness; supported only on PostgreSQL and SQLite."""
+
+        def decorator[M: Model](
+            callback: Callable[[type[M]], Criterion[M]] | classmethod[M, [], Criterion[M]],
+        ) -> UniqueConstraint:
+            from rakko.migrations.constraints import UniqueConstraint
+
+            if isinstance(callback, classmethod):
+                callback = callback.__func__
+            constraint = UniqueConstraint(fields, callback.__name__, callback)
+
+            if self.get("constraints") is None:
+                self.constraints = []
+
+            self.constraints.append(constraint)
+
+            return constraint
+
+        return decorator
+
 
 class Model(metaclass=ModelMeta):
     """
     Base class for all Tortoise ORM Models.
     """
+
     Meta: ClassVar[dict[str, Any]]
 
     _meta: ClassVar[MetaInfo]
@@ -1331,7 +1376,9 @@ class Model(metaclass=ModelMeta):
         await db.executor_class(model=self.__class__, db=db).execute_delete(self)
         await self._post_delete(db)
 
-    async def fetch_related(self, *args: FieldReference, using_db: BaseDBAsyncClient | None = None) -> None:
+    async def fetch_related(
+        self, *args: FieldReference, using_db: BaseDBAsyncClient | None = None
+    ) -> None:
         """
         Fetch related fields.
 
@@ -1458,9 +1505,7 @@ class Model(metaclass=ModelMeta):
         """
         return cast(
             QuerySet[P, M], cast(type[M], cls)._db_queryset(using_db, for_write=True)
-        ).select_for_update(
-            nowait, skip_locked, of, no_key=no_key
-        )
+        ).select_for_update(nowait, skip_locked, of, no_key=no_key)
 
     @classmethod  # type: ignore[arg-type]
     async def update_or_create[**P, M: Model](
@@ -1595,9 +1640,7 @@ class Model(metaclass=ModelMeta):
         return cls._db_queryset(using_db).last()
 
     @classmethod  # type: ignore[arg-type]
-    def filter[**P, M: Model](
-        cls: Callable[P, M], criterion: Criterion[M]
-    ) -> QuerySet[P, M]:
+    def filter[**P, M: Model](cls: Callable[P, M], criterion: Criterion[M]) -> QuerySet[P, M]:
         """Return records matching a criterion bound to this model."""
         return cast(type[M], cls)._meta.manager.get_queryset().filter(criterion)
 
@@ -1620,16 +1663,12 @@ class Model(metaclass=ModelMeta):
         return cls._meta.manager.get_queryset().earliest(*orderings)
 
     @classmethod  # type: ignore[arg-type]
-    def exclude[**P, M: Model](
-        cls: Callable[P, M], criterion: Criterion[M]
-    ) -> QuerySet[P, M]:
+    def exclude[**P, M: Model](cls: Callable[P, M], criterion: Criterion[M]) -> QuerySet[P, M]:
         """Return records that do not match one model-bound criterion."""
         return cast(type[M], cls)._meta.manager.get_queryset().exclude(criterion)
 
     @classmethod  # type: ignore[arg-type]
-    def annotate[**P, M: Model](
-        cls: Callable[P, M], **kwargs: Expression | Term
-    ) -> QuerySet[P, M]:
+    def annotate[**P, M: Model](cls: Callable[P, M], **kwargs: Expression | Term) -> QuerySet[P, M]:
         """
         Annotates the result set with extra Functions/Aggregations/Expressions.
 
@@ -1850,4 +1889,3 @@ def meta(definition: type[MetaOption]) -> MetaOption:
         meta_dict[key] = value
 
     return meta_dict
-

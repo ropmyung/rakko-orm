@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from starlette.types import Lifespan
 
     from rakko.config import TortoiseConfig
-    from rakko.context import TortoiseContext
+    from rakko.context import RakkoContext
 
 
 class RegisterTortoise(AbstractAsyncContextManager):
@@ -46,7 +46,7 @@ class RegisterTortoise(AbstractAsyncContextManager):
         self._create_db = _create_db
         self._enable_global_fallback = _enable_global_fallback
 
-    async def init_orm(self) -> TortoiseContext:  # pylint: disable=W0612
+    async def init_orm(self) -> RakkoContext:  # pylint: disable=W0612
         ctx = await Rakko.init(
             config=self.config,
             config_file=self.config_file,

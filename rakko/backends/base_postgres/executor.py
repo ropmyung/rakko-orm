@@ -102,7 +102,8 @@ class BasePostgresExecutor(BaseExecutor):
         builder = cast(PostgreSQLQueryBuilder, self.db.query_class.into(self.model._meta.basetable))
         query = (
             builder.columns(*columns).insert(*[self.parameter(i) for i in range(len(columns))])
-            if columns else builder.default_values()
+            if columns
+            else builder.default_values()
         )
         if has_generated and (generated_fields := self.model._meta.generated_db_fields):
             query = query.returning(*generated_fields)
@@ -121,7 +122,9 @@ class BasePostgresExecutor(BaseExecutor):
             query = query.returning(*returning_fields)  # type: ignore[operator]
         return query
 
-    async def _process_insert_result(self, instance: Model, results: Mapping[str, Any] | None) -> None:
+    async def _process_insert_result(
+        self, instance: Model, results: Mapping[str, Any] | None
+    ) -> None:
         if results:
             db_projection = instance._meta.fields_db_projection_reverse
             for key, val in results.items():
